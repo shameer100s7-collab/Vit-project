@@ -505,3 +505,193 @@ export interface RiskHistoryItem {
 export * from './courtroom';
 export * from './marketContext';
 
+// ==========================================
+// 8. On-Chain Strategy & Verification System
+// ==========================================
+export type VerificationBadgeType =
+  | 'VERIFIED'
+  | 'PARTIALLY_VERIFIED'
+  | 'UNDER_REVIEW'
+  | 'INSUFFICIENT_DATA'
+  | 'ANOMALY_DETECTED';
+
+export interface StrategyCreatePayload {
+  name: string;
+  description?: string;
+  asset: string;
+  timeframe: string;
+  entry_condition: string;
+  exit_condition: string;
+  stop_loss_pct: number;
+  take_profit_pct: number;
+  position_sizing_pct: number;
+  fast_period?: number;
+  slow_period?: number;
+  rsi_period?: number;
+  risk_parameters?: Record<string, any>;
+}
+
+export interface StrategyItem {
+  id: string;
+  name: string;
+  description?: string;
+  asset: string;
+  timeframe: string;
+  canonical_rules: Record<string, any>;
+  strategy_hash: string;
+  ipfs_cid?: string;
+  is_onchain: boolean;
+  tx_hash?: string;
+  contract_address?: string;
+  block_number?: number;
+  network?: string;
+  created_at: string;
+  verification_badge: VerificationBadgeType;
+  verification_score?: number;
+  total_return_pct?: number;
+  win_rate?: number;
+}
+
+export interface BacktestPerformance {
+  initial_capital: number;
+  final_capital: number;
+  net_pnl: number;
+  total_return_pct: number;
+  total_trades: number;
+  winning_trades: number;
+  losing_trades: number;
+  win_rate: number;
+  profit_factor: number;
+  max_drawdown: number;
+  sharpe_ratio: number;
+  sortino_ratio: number;
+  average_win: number;
+  average_loss: number;
+  largest_win: number;
+  largest_loss: number;
+  exposure_pct: number;
+}
+
+export interface EquityCurvePoint {
+  timestamp: string;
+  equity: number;
+  drawdown_pct: number;
+}
+
+export interface BacktestTradeLogItem {
+  trade_id: string;
+  entry_time: string;
+  exit_time: string;
+  direction: string;
+  entry_price: number;
+  exit_price: number;
+  size: number;
+  pnl: number;
+  return_pct: number;
+  exit_reason: string;
+}
+
+export interface BacktestResult {
+  backtest_run_id: string;
+  asset: string;
+  timeframe: string;
+  start_date: string;
+  end_date: string;
+  candle_count: number;
+  parameters: Record<string, any>;
+  performance: BacktestPerformance;
+  equity_curve: EquityCurvePoint[];
+  trades_log: BacktestTradeLogItem[];
+  data_provenance: {
+    data_source: string;
+    period: string;
+    backtest_run_id: string;
+    fee_model: string;
+    slippage_model: string;
+  };
+}
+
+export interface PaperTradeItem {
+  trade_id: string;
+  strategy_id: string;
+  asset: string;
+  direction: string;
+  entry_price: number;
+  exit_price?: number;
+  quantity: number;
+  timestamp: string;
+  pnl: number;
+  exit_reason?: string;
+}
+
+export interface PaperTradingStatus {
+  strategy_id: string;
+  asset: string;
+  is_active: boolean;
+  status: string;
+  started_at?: string;
+  last_signal: string;
+  last_signal_time?: string;
+  current_price: number;
+  open_position?: {
+    direction: string;
+    entry_price: number;
+    quantity: number;
+    entry_time: string;
+  } | null;
+  realized_pnl: number;
+  unrealized_pnl: number;
+  total_trades: number;
+  win_rate: number;
+  trades: PaperTradeItem[];
+}
+
+export interface OnChainProof {
+  strategy_id: string;
+  strategy_hash: string;
+  ipfs_cid?: string;
+  blockchain_network: string;
+  contract_address: string;
+  transaction_hash?: string;
+  block_number?: number;
+  registration_timestamp?: string;
+  status: string;
+  explorer_url?: string;
+  is_verified: boolean;
+}
+
+export interface AnomalyItem {
+  type: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  description: string;
+  evidence: string;
+}
+
+export interface FailureConditionItem {
+  condition: string;
+  observed_performance: string;
+  occurrences: number;
+  evidence: string;
+  affected_period: string;
+}
+
+export interface StrategyVerificationResult {
+  strategy_id: string;
+  badge: VerificationBadgeType;
+  score?: number;
+  score_breakdown: {
+    data_completeness: number;
+    backtest_coverage: number;
+    sample_size: number;
+    onchain_proof: number;
+    anomaly_clearance: number;
+    max_score: number;
+  };
+  performance_analysis: string;
+  risk_analysis: string;
+  overfitting_analysis: string;
+  anomalies: AnomalyItem[];
+  failure_conditions: FailureConditionItem[];
+  data_provenance: Record<string, any>;
+}
+

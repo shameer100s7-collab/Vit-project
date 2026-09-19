@@ -8,6 +8,7 @@ import {
   PieChart,
   BookOpen,
   Settings,
+  ShieldCheck,
 } from 'lucide-react';
 
 const MAIN_NAV = [
@@ -15,6 +16,7 @@ const MAIN_NAV = [
   { path: '/market', label: 'Markets', icon: TrendingUp },
   { path: '/courtroom', label: 'Courtroom', icon: Scale },
   { path: '/signals', label: 'Signals', icon: Zap },
+  { path: '/strategies', label: 'Strategies', icon: ShieldCheck },
   { path: '/portfolio-risk', label: 'Portfolio', icon: PieChart },
   { path: '/research', label: 'Research', icon: BookOpen },
 ];

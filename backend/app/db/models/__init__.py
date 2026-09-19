@@ -10,6 +10,7 @@ from app.db.models.portfolio import Portfolio, PortfolioAsset
 from app.db.models.research import ResearchResult
 from app.db.models.risk import RiskAnalysis
 from app.db.models.signal import Signal
+from app.db.models.strategy import Strategy, StrategyPaperTrade, StrategyVerification
 from app.db.models.user import User, UserRole
 
 __all__ = [
@@ -26,6 +27,9 @@ __all__ = [
     "RiskAnalysis",
     "ResearchResult",
     "BacktestRun",
+    "Strategy",
+    "StrategyPaperTrade",
+    "StrategyVerification",
     "ModelVersion",
     "AuditLog",
 ]

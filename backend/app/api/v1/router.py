@@ -1,7 +1,7 @@
 """API v1 master router incorporating all sub-modules."""
 
 from fastapi import APIRouter
-from app.api.v1.routes import auth, behavior, courtroom, health, intelligence, market, portfolio, risk, signals
+from app.api.v1.routes import auth, behavior, courtroom, health, intelligence, market, portfolio, risk, signals, strategies
 
 api_v1_router = APIRouter()
 
@@ -31,6 +31,9 @@ api_v1_router.include_router(risk.router, prefix="/risk", tags=["Risk"])
 
 # Adversarial Courtroom routes
 api_v1_router.include_router(courtroom.router, prefix="/courtroom", tags=["Courtroom"])
+
+# Real-time On-Chain + AI-Verified Strategy Platform routes
+api_v1_router.include_router(strategies.router, prefix="/strategies", tags=["Strategies"])
 
 
 

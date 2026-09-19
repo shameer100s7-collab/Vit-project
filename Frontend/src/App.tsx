@@ -11,6 +11,8 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { Onboarding } from './pages/Onboarding';
 import { Research } from './pages/Research';
 import { Courtroom } from './pages/Courtroom';
+import { Strategies } from './pages/Strategies';
+import { StrategyDetail } from './pages/StrategyDetail';
 
 export const App: React.FC = () => {
   return (
@@ -32,6 +34,8 @@ export const App: React.FC = () => {
           <Route path="/features" element={<Navigate to="/research" replace />} />
           <Route path="/market-state" element={<Navigate to="/research" replace />} />
           <Route path="/signals" element={<Signals />} />
+          <Route path="/strategies" element={<Strategies />} />
+          <Route path="/strategies/:id" element={<StrategyDetail />} />
           <Route path="/behavior" element={<Navigate to="/research" replace />} />
           <Route path="/risk" element={<Navigate to="/research" replace />} />
           <Route path="/portfolio-risk" element={<PortfolioRisk />} />

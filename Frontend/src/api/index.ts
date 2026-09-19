@@ -10,3 +10,4 @@ export * from './livePriceService';
 export * from './balanceService';
 export * from './profileService';
 export * from './portfolioService';
+export * from './strategies';
