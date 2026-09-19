@@ -7,10 +7,74 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_request_id
 from app.db.database import get_db
 from app.schemas.common import StandardSuccessResponse
+from app.schemas.market_context import MarketContextRequest, MarketContextResult, ScreenshotQualityGateResult
 from app.schemas.signals import AggregatedSignalResult, SignalHistoryItem
+from app.services.market_context import MarketContextService, get_market_context_service
 from app.services.signal_engine import SignalService, get_signal_service
 
 router = APIRouter()
+
+
+@router.post(
+    "/context/analyze",
+    response_model=StandardSuccessResponse[MarketContextResult],
+    summary="Analyze Market Context from Screenshot",
+    description=(
+        "Transforms a user chart screenshot into structured, evidence-based market context. "
+        "Enforces a strict visual Quality Gate, builds a 7-dimensional Market Map (Price, Structure, "
+        "Time, Volume, Range, Location, Candle Behavior), identifies supporting and conflicting evidence, "
+        "and defines objective What to Watch conditions without generating buy/sell prediction signals."
+    ),
+)
+async def analyze_market_context(
+    payload: MarketContextRequest,
+    service: MarketContextService = Depends(get_market_context_service),
+    request_id: str = Depends(get_request_id),
+) -> StandardSuccessResponse[MarketContextResult]:
+    """Analyzes market context from an uploaded chart screenshot."""
+    result = await service.analyze_context(payload)
+    return StandardSuccessResponse(
+        success=True,
+        data=result,
+        metadata={
+            "request_id": request_id,
+            "asset": result.asset,
+            "timeframe": result.timeframe,
+            "evidence_quality": result.evidence_quality.value,
+            "market_state": result.market_state.state.value,
+            "quality_gate_passed": result.quality_gate.quality_gate_passed,
+        },
+    )
+
+
+@router.post(
+    "/context/quality-check",
+    response_model=StandardSuccessResponse[ScreenshotQualityGateResult],
+    summary="Pre-flight Screenshot Quality Check",
+    description="Validates image resolution, sharpness, and candle visibility before full market analysis.",
+)
+async def check_screenshot_quality(
+    payload: MarketContextRequest,
+    service: MarketContextService = Depends(get_market_context_service),
+    request_id: str = Depends(get_request_id),
+) -> StandardSuccessResponse[ScreenshotQualityGateResult]:
+    """Performs pre-flight quality check on chart screenshot."""
+    result = service.check_quality(
+        image_data=payload.image_data,
+        asset=payload.asset,
+        timeframe=payload.timeframe,
+        has_volume=payload.has_volume if payload.has_volume is not None else True,
+    )
+    return StandardSuccessResponse(
+        success=True,
+        data=result,
+        metadata={
+            "request_id": request_id,
+            "quality_gate_passed": result.quality_gate_passed,
+            "clarity_rating": result.clarity_rating.value,
+        },
+    )
+
 
 
 @router.get(
