@@ -13,6 +13,8 @@ import { MetricCard } from '../components/common/MetricCard';
 import { RiskBadge } from '../components/common/RiskBadge';
 import { ErrorState } from '../components/common/ErrorState';
 import { AssetSelector } from '../components/common/AssetSelector';
+import { Watchlist } from '../components/common/Watchlist';
+import { useLivePrice } from '../hooks/useLivePrice';
 import { RefreshCw, TrendingUp, Zap, ShieldAlert, Activity, ChevronRight, Info, CheckCircle2 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
@@ -64,7 +66,8 @@ export const Dashboard: React.FC = () => {
   }, [fetchDashboardData]);
 
   // Derived calculations matching strict TS types
-  const priceDisplay = price ? `$${price.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '—';
+  const livePrice = useLivePrice(selectedSymbol, price?.price || null);
+  const priceDisplay = livePrice ? `$${livePrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '—';
   const change24h = volume?.price_change_pct_24h ?? 0;
   const confidencePercent = marketState ? Math.round(marketState.confidence * 100) : 0;
   const agreementCount = signal ? Math.round(signal.consensus_metrics.agreement_ratio * signal.consensus_metrics.strategies_evaluated) : 0;
@@ -298,6 +301,8 @@ export const Dashboard: React.FC = () => {
 
         {/* Right Column: Signals & Risk Breakdown */}
         <div className="space-y-6">
+          <Watchlist onSelectSymbol={setSelectedSymbol} />
+          
           {/* Signals Breakdown Card */}
           <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-ghost-border/50">

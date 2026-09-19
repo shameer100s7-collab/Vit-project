@@ -6,3 +6,5 @@ export * from './intelligence';
 export * from './signals';
 export * from './behavior';
 export * from './risk';
+export * from './livePriceService';
+export * from './balanceService';

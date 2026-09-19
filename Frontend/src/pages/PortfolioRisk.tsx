@@ -5,6 +5,7 @@ import { MetricCard } from '../components/common/MetricCard';
 import { RiskBadge } from '../components/common/RiskBadge';
 import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
+import { ActualBalances } from '../components/common/ActualBalances';
 import { PieChart, Plus, Trash2, ShieldAlert, Play } from 'lucide-react';
 
 export const PortfolioRisk: React.FC = () => {
@@ -87,6 +88,9 @@ export const PortfolioRisk: React.FC = () => {
       </div>
 
       {error && <ErrorState error={error} onRetry={handleEvaluate} />}
+
+      {/* Actual Balances from Backend */}
+      <ActualBalances />
 
       {/* Allocation Input Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
