@@ -29,6 +29,13 @@ from app.schemas.market_state import (
     MarketStateResult,
     MarketStateScores,
 )
+from app.schemas.signals import (
+    AggregatedSignalResult,
+    SignalDirection,
+    SignalHistoryItem,
+    StrategySignal,
+    TimeHorizon,
+)
 
 __all__ = [
     "ErrorDetail",
@@ -52,4 +59,9 @@ __all__ = [
     "EvidenceItem",
     "MarketStateScores",
     "MarketStateResult",
+    "SignalDirection",
+    "TimeHorizon",
+    "StrategySignal",
+    "AggregatedSignalResult",
+    "SignalHistoryItem",
 ]
