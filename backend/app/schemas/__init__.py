@@ -29,6 +29,14 @@ from app.schemas.market_state import (
     MarketStateResult,
     MarketStateScores,
 )
+from app.schemas.behavior import (
+    BehaviorAnalysisResult,
+    BehaviorState,
+    LiquidityPressure,
+    ObservationItem,
+    ParticipantArchetype,
+    WhaleActivityIndicator,
+)
 from app.schemas.signals import (
     AggregatedSignalResult,
     SignalDirection,
@@ -64,4 +72,10 @@ __all__ = [
     "StrategySignal",
     "AggregatedSignalResult",
     "SignalHistoryItem",
+    "BehaviorState",
+    "ParticipantArchetype",
+    "ObservationItem",
+    "LiquidityPressure",
+    "WhaleActivityIndicator",
+    "BehaviorAnalysisResult",
 ]
