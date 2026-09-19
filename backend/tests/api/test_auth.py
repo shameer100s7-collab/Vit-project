@@ -206,3 +206,36 @@ async def test_logout_and_revocation(async_client: AsyncClient) -> None:
     )
     assert me_res.status_code == 401
     assert "revoked" in me_res.json()["error"]["message"].lower()
+
+
+@pytest.mark.asyncio
+async def test_rbac_role_enforcement() -> None:
+    """Verify require_role permits authorized roles and forbids unauthorized roles."""
+    from app.api.deps import require_role
+    from app.core.exceptions import ForbiddenException
+    from app.db.models.user import User, UserRole
+
+    analyst_user = User(
+        email="analyst@ghost.io",
+        hashed_password="hash",
+        role=UserRole.ANALYST,
+        is_active=True,
+    )
+    regular_user = User(
+        email="user@ghost.io",
+        hashed_password="hash",
+        role=UserRole.USER,
+        is_active=True,
+    )
+
+    admin_or_analyst_checker = require_role(UserRole.ANALYST, UserRole.ADMIN)
+
+    # Permitted role passes
+    allowed = await admin_or_analyst_checker(current_user=analyst_user)
+    assert allowed.email == "analyst@ghost.io"
+
+    # Forbidden role raises 403 ForbiddenException
+    with pytest.raises(ForbiddenException) as exc_info:
+        await admin_or_analyst_checker(current_user=regular_user)
+    assert "insufficient permissions" in str(exc_info.value.message).lower()
+    assert exc_info.value.status_code == 403
