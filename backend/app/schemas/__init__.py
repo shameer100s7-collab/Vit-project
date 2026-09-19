@@ -13,6 +13,16 @@ from app.schemas.common import (
     StandardErrorResponse,
     StandardSuccessResponse,
 )
+from app.schemas.market import (
+    CanonicalAssetMetadata,
+    CanonicalCandle,
+    CanonicalMarketOverview,
+    CanonicalMarketOverviewItem,
+    CanonicalOrderBook,
+    CanonicalPrice,
+    CanonicalVolume,
+    OrderBookLevel,
+)
 
 __all__ = [
     "ErrorDetail",
@@ -24,4 +34,12 @@ __all__ = [
     "RefreshTokenRequest",
     "TokenResponse",
     "UserResponse",
+    "CanonicalPrice",
+    "CanonicalCandle",
+    "CanonicalOrderBook",
+    "OrderBookLevel",
+    "CanonicalVolume",
+    "CanonicalAssetMetadata",
+    "CanonicalMarketOverviewItem",
+    "CanonicalMarketOverview",
 ]
