@@ -5,7 +5,6 @@ import { Dashboard } from './pages/Dashboard';
 import { Market } from './pages/Market';
 import { Signals } from './pages/Signals';
 import { PortfolioRisk } from './pages/PortfolioRisk';
-import { ApiConsole } from './pages/ApiConsole';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
@@ -36,8 +35,7 @@ export const App: React.FC = () => {
           <Route path="/risk-history" element={<Navigate to="/research" replace />} />
           <Route path="/optimization" element={<Navigate to="/research" replace />} />
           <Route path="/research" element={<Research />} />
-          <Route path="/console" element={<ApiConsole />} />
-          <Route path="/settings" element={<div className="p-8">Settings coming soon</div>} />
+          <Route path="/settings" element={<div className="p-8 font-medium text-ghost-textMuted">Settings feature coming soon.</div>} />
         </Route>
       </Route>
 

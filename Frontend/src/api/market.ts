@@ -6,6 +6,7 @@ import {
   CanonicalOrderBook,
   CanonicalPrice,
   CanonicalVolume,
+  TradableSymbolItem,
 } from '../types';
 
 export const marketApi = {
@@ -14,6 +15,9 @@ export const marketApi = {
 
   /** GET /api/v1/market/overview */
   getOverview: () => api.get<CanonicalMarketOverview>('/api/v1/market/overview'),
+
+  /** GET /api/v1/market/symbols */
+  getSymbols: () => api.get<TradableSymbolItem[]>('/api/v1/market/symbols'),
 
   /** GET /api/v1/market/{symbol} */
   getPrice: (symbol: string) => api.get<CanonicalPrice>(`/api/v1/market/${encodeURIComponent(formatSymbolForApi(symbol))}`),

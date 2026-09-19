@@ -73,22 +73,32 @@ export interface UserRegisterRequest {
 export interface CanonicalPrice {
   symbol: string;
   price: number;
+  currency?: string;
   timestamp: string;
   source: string;
+  bid_price?: number | null;
+  ask_price?: number | null;
 }
 
 export interface CanonicalCandle {
+  symbol?: string;
+  timeframe?: string;
   timestamp: string;
+  close_time?: string;
   open: number;
   high: number;
   low: number;
   close: number;
   volume: number;
+  quote_volume?: number;
+  trades_count?: number;
+  source?: string;
 }
 
 export interface OrderBookLevel {
   price: number;
   quantity: number;
+  total?: number;
 }
 
 export interface CanonicalOrderBook {
@@ -97,40 +107,75 @@ export interface CanonicalOrderBook {
   bids: OrderBookLevel[];
   asks: OrderBookLevel[];
   spread: number;
-  spread_pct: number;
+  spread_pct?: number;
+  bid_depth?: number;
+  ask_depth?: number;
+  last_update_id?: number;
+  source?: string;
 }
 
 export interface CanonicalVolume {
   symbol: string;
   volume_24h: number;
+  volume_usd_24h?: number;
   quote_volume_24h: number;
+  change_24h?: number;
   price_change_pct_24h: number;
+  price_change_24h?: number;
   high_24h: number;
   low_24h: number;
+  open_price_24h?: number;
+  last_price?: number;
+  trades_count_24h?: number;
+  bid_price?: number;
+  ask_price?: number;
+  source: string;
   timestamp: string;
+}
+
+export interface TradableSymbolItem {
+  symbol: string;
+  display_symbol: string;
+  base_asset: string;
+  quote_asset: string;
+  status: string;
+  price_precision: number;
+  quantity_precision: number;
+  min_order_quantity: number;
+  is_active: boolean;
 }
 
 export interface CanonicalMarketOverviewItem {
   symbol: string;
   price: number;
   price_change_pct_24h: number;
+  change_24h?: number;
   volume_24h: number;
-  high_24h: number;
-  low_24h: number;
+  high_24h?: number;
+  low_24h?: number;
+  source?: string;
 }
 
 export interface CanonicalMarketOverview {
   timestamp: string;
-  assets: CanonicalMarketOverviewItem[];
+  items?: CanonicalMarketOverviewItem[];
+  assets?: CanonicalMarketOverviewItem[];
+  total_volume_24h?: number;
+  source?: string;
 }
 
 export interface CanonicalAssetMetadata {
   symbol: string;
+  name?: string;
   base_asset: string;
   quote_asset: string;
+  base_currency?: string;
+  quote_currency?: string;
   price_precision: number;
-  quantity_precision: number;
+  price_decimals?: number;
+  quantity_precision?: number;
   min_order_quantity: number;
+  min_order_size?: number;
   is_active: boolean;
 }
 
@@ -148,11 +193,12 @@ export type MarketState =
   | 'UNCERTAIN';
 
 export interface EvidenceItem {
-  indicator_name: string;
-  observed_value: number;
-  threshold: number;
-  supports_state: boolean;
-  rationale: string;
+  indicator: string;
+  value: number;
+  condition: string;
+  interpretation: string;
+  supports_state: MarketState;
+  weight: number;
 }
 
 export interface MarketStateScores {
@@ -170,12 +216,15 @@ export interface MarketStateResult {
   timestamp: string;
   state: MarketState;
   confidence: number;
+  primary_rationale?: string;
   evidence: EvidenceItem[];
-  scores: MarketStateScores;
+  scores?: MarketStateScores;
   conflict_detected: boolean;
-  conflict_reasons: string[];
-  features_used: Record<string, number>;
-  model_version: string;
+  conflict_score?: number;
+  conflict_reasons?: string[];
+  features_used?: Record<string, number>;
+  model_version?: string;
+  timeframe?: string;
 }
 
 // ==========================================
@@ -239,52 +288,45 @@ export type BehaviorState =
 
 export interface ObservationItem {
   metric: string;
-  observed_value: number;
-  unit: string;
-  context: string;
-  is_factual: boolean;
+  value: number;
+  interpretation: string;
+  source: string;
 }
 
 export interface LiquidityPressure {
-  depth_asymmetry: number;
-  bid_depth_total: number;
-  ask_depth_total: number;
+  bid_pressure: number;
+  ask_pressure: number;
   net_imbalance: number;
   spread_bps: number;
-  depth_resilience: number;
+  depth_resilience: string;
 }
 
 export interface WhaleActivityIndicator {
-  whale_activity_score: number;
-  large_resting_walls_count: number;
-  volume_concentration_ratio: number;
+  wall_detected: boolean;
+  wall_side?: string | null;
+  concentration_score: number;
   absorption_ratio: number;
-  detected_walls: Array<{
-    side: string;
-    price: number;
-    size: number;
-    ratio_to_avg: number;
-  }>;
+  large_order_clustering: boolean;
 }
 
 export interface ParticipantActivity {
   archetype: string;
-  activity_level: string;
   dominance_score: number;
-  observed_patterns: string[];
 }
 
 export interface BehaviorAnalysisResult {
   symbol: string;
   timestamp: string;
-  primary_behavior_state: BehaviorState;
-  state_confidence: number;
+  behavior_state: BehaviorState;
+  confidence: number;
+  primary_participant: string;
+  summary: string;
   observations: ObservationItem[];
+  participant_breakdown: Record<string, number>;
   liquidity_pressure: LiquidityPressure;
   whale_activity: WhaleActivityIndicator;
-  participant_inferences: ParticipantActivity[];
-  game_theoretic_summary: string;
-  regime_context: string;
+  timeframe: string;
+  model_version: string;
 }
 
 // ==========================================

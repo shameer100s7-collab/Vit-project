@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ApiStatusBadge } from '../common/ApiStatusBadge';
 import { useAuth } from '../../context/AuthContext';
 import { LogOut, User as UserIcon } from 'lucide-react';
 
@@ -26,10 +25,8 @@ export const Navbar: React.FC = () => {
         </Link>
       </div>
 
-      {/* Status & User Actions */}
+      {/* User Actions */}
       <div className="flex items-center gap-4 text-xs">
-        <ApiStatusBadge />
-
         {isAuthenticated && user ? (
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 bg-ghost-card border border-ghost-border rounded-lg text-xs text-ghost-textMuted">

@@ -6,7 +6,6 @@ import {
   Zap,
   PieChart,
   BookOpen,
-  Terminal,
   Settings,
 } from 'lucide-react';
 
@@ -18,8 +17,7 @@ const MAIN_NAV = [
   { path: '/research', label: 'Research', icon: BookOpen },
 ];
 
-const DEV_NAV = [
-  { path: '/console', label: 'Developer', icon: Terminal },
+const SECONDARY_NAV = [
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -56,9 +54,9 @@ export const Sidebar: React.FC = () => {
           <hr className="border-ghost-border/60" />
         </div>
 
-        {/* Developer & Settings */}
+        {/* Settings */}
         <div className="space-y-1">
-          {DEV_NAV.map((item) => {
+          {SECONDARY_NAV.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink

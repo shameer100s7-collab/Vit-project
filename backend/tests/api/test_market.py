@@ -106,7 +106,21 @@ async def test_get_asset_metadata(async_client: AsyncClient) -> None:
     assert data["name"] == "Bitcoin"
     assert data["asset_class"] == "crypto"
     assert data["base_currency"] == "BTC"
-    assert data["quote_currency"] == "USD"
+    assert data["quote_currency"] in ("USD", "USDT")
+
+
+@pytest.mark.asyncio
+async def test_get_tradable_symbols(async_client: AsyncClient) -> None:
+    """Verify GET /api/v1/market/symbols returns discovered active trading symbols."""
+    response = await async_client.get("/api/v1/market/symbols")
+    assert response.status_code == 200
+    body = response.json()
+
+    assert body["success"] is True
+    assert "data" in body
+    assert len(body["data"]) > 0
+    symbols = [s["symbol"] for s in body["data"]]
+    assert "BTCUSDT" in symbols
 
 
 @pytest.mark.asyncio

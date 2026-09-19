@@ -72,7 +72,7 @@ class Settings(BaseSettings):
     REDIS_PASSWORD: str = ""
 
     # Market Data Engine (Phase 4 & 5)
-    MARKET_DATA_PROVIDER: str = "mock"  # "mock" or "binance"
+    MARKET_DATA_PROVIDER: str = "binance"  # "mock" or "binance"
     MARKET_DATA_CACHE_TTL: int = 10  # in seconds
     BINANCE_API_URL: str = "https://api.binance.com/api/v3"
 

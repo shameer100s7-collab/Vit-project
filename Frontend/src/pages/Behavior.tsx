@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { behaviorApi } from '../api';
-import { BehaviorAnalysisResult, ParticipantActivity } from '../types';
+import { BehaviorAnalysisResult } from '../types';
 import { MetricCard } from '../components/common/MetricCard';
 import { RiskBadge } from '../components/common/RiskBadge';
 import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
 import { AssetSelector } from '../components/common/AssetSelector';
-import { Activity, RefreshCw, Users, Eye, ChevronRight } from 'lucide-react';
+import { Activity, RefreshCw, Users, Eye, ChevronRight, AlertCircle, Shield } from 'lucide-react';
 
 export const Behavior: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState<string>('BTC/USDT');
@@ -33,10 +33,13 @@ export const Behavior: React.FC = () => {
     fetchBehavior();
   }, [fetchBehavior]);
 
-  const obi = behavior ? behavior.liquidity_pressure.net_imbalance : 0;
-  const detectedWalls = behavior ? behavior.whale_activity.detected_walls : [];
-  const bidWalls = detectedWalls.filter((w) => w.side.toLowerCase() === 'bid' || w.side.toLowerCase() === 'buy');
-  const askWalls = detectedWalls.filter((w) => w.side.toLowerCase() === 'ask' || w.side.toLowerCase() === 'sell');
+  const obi = behavior?.liquidity_pressure?.net_imbalance ?? 0;
+  const spreadBps = behavior?.liquidity_pressure?.spread_bps ?? 0;
+  const confidencePercent = behavior ? Math.round((behavior.confidence ?? 0) * 100) : 0;
+  const behaviorStateText = behavior?.behavior_state ? behavior.behavior_state.replace(/_/g, ' ') : 'NEUTRAL';
+  const primaryParticipantText = behavior?.primary_participant ? behavior.primary_participant.replace(/_/g, ' ') : 'MIXED';
+
+  const participantBreakdown = behavior?.participant_breakdown ? Object.entries(behavior.participant_breakdown) : [];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -47,7 +50,7 @@ export const Behavior: React.FC = () => {
             Market Activity
           </h1>
           <p className="text-sm text-ghost-textMuted mt-0.5">
-            Microstructure order flow imbalance and activity patterns for {selectedSymbol}.
+            Microstructure order flow imbalance and participant footprints for {selectedSymbol}.
           </p>
         </div>
 
@@ -89,8 +92,8 @@ export const Behavior: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
               label="Activity State"
-              value={behavior.primary_behavior_state.replace('_', ' ')}
-              badge={<RiskBadge label={behavior.primary_behavior_state} size="sm" />}
+              value={behaviorStateText}
+              badge={<RiskBadge label={behavior.behavior_state} size="sm" />}
               icon={<Activity className="w-4 h-4" />}
               variant="cyan"
             />
@@ -98,22 +101,37 @@ export const Behavior: React.FC = () => {
             <MetricCard
               label="Order Book Imbalance"
               value={`${(obi * 100).toFixed(1)}%`}
-              subValue={obi > 0 ? 'Net Bid Accumulation' : 'Net Ask Pressure'}
-              variant={obi > 0 ? 'green' : 'red'}
+              subValue={obi > 0 ? 'Net Buyer Accumulation' : obi < 0 ? 'Net Seller Pressure' : 'Balanced Book'}
+              variant={obi > 0 ? 'green' : obi < 0 ? 'red' : 'default'}
             />
 
             <MetricCard
-              label="Resting Wall Barriers"
-              value={`${bidWalls.length} Bids / ${askWalls.length} Asks`}
-              subValue="Significant liquidity concentrations"
+              label="Bid-Ask Spread"
+              value={`${spreadBps.toFixed(1)} bps`}
+              subValue={`Resilience: ${behavior.liquidity_pressure.depth_resilience || 'NORMAL'}`}
             />
 
             <MetricCard
-              label="Confidence"
-              value={`${Math.round(behavior.state_confidence * 100)}%`}
-              subValue="Evaluated over 100 candles"
+              label="Model Confidence"
+              value={`${confidencePercent}%`}
+              subValue={`Primary: ${primaryParticipantText}`}
             />
           </div>
+
+          {/* Activity Summary Narrative */}
+          {behavior.summary && (
+            <div className="p-4 bg-ghost-card border border-ghost-border rounded-xl flex items-start gap-3">
+              <Shield className="w-5 h-5 text-ghost-cyan shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-xs font-semibold text-ghost-textPrimary uppercase tracking-wider">
+                  Microstructure Intelligence Synthesis
+                </h3>
+                <p className="text-sm text-ghost-textMuted mt-1 leading-relaxed">
+                  {behavior.summary}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Factual Microstructure Observations Card */}
           <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4">
@@ -126,43 +144,70 @@ export const Behavior: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Bid Walls */}
-              <div className="p-4 bg-ghost-darkest/60 border border-ghost-border/60 rounded-lg space-y-2">
-                <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-                  Support Bids ({bidWalls.length} Walls Detected)
-                </h3>
-                {bidWalls.length > 0 ? (
-                  <div className="space-y-1.5 font-mono text-xs">
-                    {bidWalls.map((wall, i: number) => (
-                      <div key={i} className="flex justify-between items-center text-ghost-textPrimary">
-                        <span>Price: ${wall.price.toFixed(2)}</span>
-                        <span className="text-emerald-400 font-bold">{wall.size.toFixed(2)} BTC</span>
+            <div className="space-y-3">
+              {behavior.observations && behavior.observations.length > 0 ? (
+                behavior.observations.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 bg-ghost-darkest/60 border border-ghost-border/60 rounded-lg flex items-start justify-between gap-4 text-xs"
+                  >
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-ghost-textPrimary">
+                          {item.metric ? item.metric.replace(/_/g, ' ') : 'Observation'}
+                        </span>
+                        {item.source && (
+                          <span className="font-mono text-[10px] px-1.5 py-0.2 bg-ghost-border/40 text-ghost-textMuted rounded uppercase">
+                            {item.source}
+                          </span>
+                        )}
                       </div>
-                    ))}
+                      <p className="text-ghost-textMuted">{item.interpretation}</p>
+                    </div>
+                    <div className="text-right font-mono font-bold text-ghost-cyan shrink-0">
+                      {typeof item.value === 'number' ? item.value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : item.value}
+                    </div>
                   </div>
-                ) : (
-                  <p className="text-xs text-ghost-textMuted">No major support bid walls detected in current depth.</p>
-                )}
+                ))
+              ) : (
+                <p className="text-xs text-ghost-textMuted p-3 bg-ghost-darkest/40 rounded-lg border border-ghost-border/40">
+                  No microstructure observations recorded.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Whale & Large Holder Footprints */}
+          <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-ghost-border/50">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-400" />
+                <h2 className="text-base font-semibold text-ghost-textPrimary">
+                  Large Block & Liquidity Cluster Analysis
+                </h2>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-sans text-xs">
+              <div className="p-4 bg-ghost-darkest/60 border border-ghost-border/60 rounded-lg space-y-1">
+                <span className="text-ghost-textMuted text-[11px] block uppercase tracking-wider">Limit Wall Detected</span>
+                <span className={`text-base font-bold ${behavior.whale_activity.wall_detected ? 'text-amber-400' : 'text-ghost-textPrimary'}`}>
+                  {behavior.whale_activity.wall_detected ? `YES (${behavior.whale_activity.wall_side || 'BID/ASK'})` : 'NO WALLS DETECTED'}
+                </span>
               </div>
 
-              {/* Ask Walls */}
-              <div className="p-4 bg-ghost-darkest/60 border border-ghost-border/60 rounded-lg space-y-2">
-                <h3 className="text-xs font-semibold text-rose-400 uppercase tracking-wider">
-                  Resistance Asks ({askWalls.length} Walls Detected)
-                </h3>
-                {askWalls.length > 0 ? (
-                  <div className="space-y-1.5 font-mono text-xs">
-                    {askWalls.map((wall, i: number) => (
-                      <div key={i} className="flex justify-between items-center text-ghost-textPrimary">
-                        <span>Price: ${wall.price.toFixed(2)}</span>
-                        <span className="text-rose-400 font-bold">{wall.size.toFixed(2)} BTC</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-ghost-textMuted">No major resistance ask walls detected in current depth.</p>
-                )}
+              <div className="p-4 bg-ghost-darkest/60 border border-ghost-border/60 rounded-lg space-y-1">
+                <span className="text-ghost-textMuted text-[11px] block uppercase tracking-wider">Depth Concentration Score</span>
+                <span className="text-base font-bold text-ghost-textPrimary font-mono">
+                  {(behavior.whale_activity.concentration_score * 100).toFixed(1)}%
+                </span>
+              </div>
+
+              <div className="p-4 bg-ghost-darkest/60 border border-ghost-border/60 rounded-lg space-y-1">
+                <span className="text-ghost-textMuted text-[11px] block uppercase tracking-wider">Absorption Ratio</span>
+                <span className="text-base font-bold text-ghost-cyan font-mono">
+                  {behavior.whale_activity.absorption_ratio.toFixed(2)}x
+                </span>
               </div>
             </div>
           </div>
@@ -173,25 +218,25 @@ export const Behavior: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-purple-400" />
                 <h2 className="text-base font-semibold text-ghost-textPrimary">
-                  Participant Archetypes
+                  Participant Archetypes Breakdown
                 </h2>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-sans text-xs">
-              {behavior.participant_inferences.map((item: ParticipantActivity) => (
-                <div key={item.archetype} className="p-4 bg-ghost-darkest/60 border border-ghost-border/60 rounded-lg space-y-2">
-                  <span className="font-semibold text-ghost-textPrimary capitalize">
-                    {item.archetype.replace('_', ' ')}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 font-sans text-xs">
+              {participantBreakdown.map(([archetype, score]) => (
+                <div key={archetype} className="p-4 bg-ghost-darkest/60 border border-ghost-border/60 rounded-lg space-y-2">
+                  <span className="font-semibold text-ghost-textPrimary capitalize block">
+                    {archetype.replace(/_/g, ' ')}
                   </span>
                   <div className="w-full bg-ghost-border/60 h-2 rounded-full overflow-hidden">
                     <div
-                      className="bg-ghost-cyan h-full rounded-full"
-                      style={{ width: `${Math.round(item.dominance_score * 100)}%` }}
+                      className="bg-ghost-cyan h-full rounded-full transition-all duration-300"
+                      style={{ width: `${Math.round(score * 100)}%` }}
                     />
                   </div>
-                  <span className="text-ghost-textMuted font-mono text-2xs block">
-                    Dominance: {Math.round(item.dominance_score * 100)}% ({item.activity_level})
+                  <span className="text-ghost-textMuted font-mono text-[11px] block">
+                    Probability: {Math.round(score * 100)}%
                   </span>
                 </div>
               ))}
@@ -211,9 +256,9 @@ export const Behavior: React.FC = () => {
             {/* Raw Telemetry Drawer */}
             {showRawTelemetry && (
               <div className="p-4 bg-ghost-darkest rounded-lg border border-ghost-border/80 text-xs font-mono text-ghost-textMuted space-y-3">
-                <p className="text-ghost-textPrimary font-semibold font-sans">Raw Observations Array:</p>
-                <pre className="text-2xs text-ghost-cyan leading-relaxed overflow-x-auto">
-                  {JSON.stringify(behavior.observations, null, 2)}
+                <p className="text-ghost-textPrimary font-semibold font-sans">Raw Microstructure Data Payload:</p>
+                <pre className="text-[11px] text-ghost-cyan leading-relaxed overflow-x-auto p-2 bg-black/40 rounded border border-ghost-border/40">
+                  {JSON.stringify(behavior, null, 2)}
                 </pre>
               </div>
             )}

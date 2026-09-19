@@ -14,6 +14,7 @@ from app.schemas.market import (
     CanonicalOrderBook,
     CanonicalPrice,
     CanonicalVolume,
+    TradableSymbolItem,
 )
 from app.services.market_data import MarketDataService, get_market_data_service
 
@@ -36,6 +37,25 @@ async def get_market_overview(
         success=True,
         data=overview,
         metadata={"request_id": request_id, "provider": service.provider.name},
+    )
+
+
+@router.get(
+    "/symbols",
+    response_model=StandardSuccessResponse[List[TradableSymbolItem]],
+    summary="Tradable Market Symbols",
+    description="Returns active tradable symbols discovered from authoritative exchange provider.",
+)
+async def get_tradable_symbols(
+    service: MarketDataService = Depends(get_market_data_service),
+    request_id: str = Depends(get_request_id),
+) -> StandardSuccessResponse[List[TradableSymbolItem]]:
+    """Retrieves discovered active tradable symbols."""
+    symbols = await service.get_tradable_symbols()
+    return StandardSuccessResponse(
+        success=True,
+        data=symbols,
+        metadata={"request_id": request_id, "provider": service.provider.name, "count": len(symbols)},
     )
 
 

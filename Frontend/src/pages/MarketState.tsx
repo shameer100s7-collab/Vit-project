@@ -118,16 +118,34 @@ export const MarketState: React.FC = () => {
                   Supporting Factors
                 </h3>
                 <div className="space-y-2">
-                  {stateResult.evidence?.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 bg-ghost-darkest/60 border border-ghost-border/40 rounded-lg flex items-center gap-3 text-xs text-ghost-textPrimary"
-                    >
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>{item.rationale || `${item.indicator_name}: ${item.observed_value}`}</span>
-                    </div>
-                  )) || (
-                    <p className="text-xs text-ghost-textMuted">No evidence recorded.</p>
+                  {stateResult.evidence && stateResult.evidence.length > 0 ? (
+                    stateResult.evidence.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3 bg-ghost-darkest/60 border border-ghost-border/40 rounded-lg flex items-start gap-3 text-xs"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 space-y-0.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-semibold text-ghost-textPrimary">
+                              {item.indicator ? item.indicator.replace(/_/g, ' ') : 'Indicator'}
+                            </span>
+                            {item.condition && (
+                              <span className="font-mono text-[11px] px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">
+                                {item.condition}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-ghost-textMuted leading-relaxed">
+                            {item.interpretation || `Observed value: ${item.value}`}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-ghost-textMuted p-3 bg-ghost-darkest/40 rounded-lg border border-ghost-border/40">
+                      No supporting factors recorded for this timeframe.
+                    </p>
                   )}
                 </div>
               </div>
@@ -137,7 +155,7 @@ export const MarketState: React.FC = () => {
                 <h3 className="text-xs font-semibold text-ghost-textMuted uppercase tracking-wider">
                   Contradictory / Conflict Observations
                 </h3>
-                {stateResult.conflict_detected && stateResult.conflict_reasons?.length > 0 ? (
+                {stateResult.conflict_detected && stateResult.conflict_reasons && stateResult.conflict_reasons.length > 0 ? (
                   <div className="space-y-2">
                     {stateResult.conflict_reasons.map((reason, idx) => (
                       <div

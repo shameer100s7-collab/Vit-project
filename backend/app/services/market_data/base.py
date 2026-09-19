@@ -11,6 +11,7 @@ from app.schemas.market import (
     CanonicalOrderBook,
     CanonicalPrice,
     CanonicalVolume,
+    TradableSymbolItem,
 )
 
 
@@ -55,6 +56,10 @@ class MarketDataProvider(ABC):
     async def get_asset_metadata(self, symbol: str) -> CanonicalAssetMetadata:
         """Fetches static metadata, tick sizes, and lot constraints for a symbol."""
         pass
+
+    async def get_tradable_symbols(self) -> List[TradableSymbolItem]:
+        """Fetches active tradable instruments discovered from the provider."""
+        return []
 
     @abstractmethod
     async def check_health(self) -> Dict[str, Any]:
