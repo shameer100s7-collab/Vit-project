@@ -22,4 +22,11 @@ export const courtroomApi = {
    */
   getCases: (limit: number = 10) =>
     api.get<CourtroomCase[]>(`/api/v1/courtroom/cases?limit=${limit}`),
+
+  /**
+   * POST /api/v1/courtroom/cases/{caseId}/refresh
+   * Refreshes an existing Courtroom case with updated live market telemetry.
+   */
+  refreshCase: (caseId: string) =>
+    api.post<CourtroomCase>(`/api/v1/courtroom/cases/${encodeURIComponent(caseId)}/refresh`),
 };

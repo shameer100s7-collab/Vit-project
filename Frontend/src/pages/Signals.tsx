@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Compass,
   Upload,
@@ -11,6 +11,9 @@ import {
   Database,
   RefreshCw,
   Info,
+  TrendingUp,
+  TrendingDown,
+  Minus,
 } from 'lucide-react';
 import { AssetSelector } from '../components/common/AssetSelector';
 import { signalsApi } from '../api';
@@ -18,6 +21,7 @@ import {
   MarketContextResult,
   MarketContextRequest,
   TimeframeScreenshot,
+  AggregatedSignalResult,
 } from '../types';
 
 const TIMEFRAMES = ['1m', '5m', '15m', '30m', '1H', '4H', '1D', '1W'];
@@ -29,6 +33,11 @@ export const Signals: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [hasVolume, setHasVolume] = useState<boolean>(true);
 
+  // Live Signal State
+  const [currentSignal, setCurrentSignal] = useState<AggregatedSignalResult | null>(null);
+  const [isSignalLoading, setIsSignalLoading] = useState<boolean>(false);
+  const [signalError, setSignalError] = useState<string | null>(null);
+
   // Multi-timeframe optional secondary screenshot
   const [enableMtf, setEnableMtf] = useState<boolean>(false);
   const [secondaryTimeframe, setSecondaryTimeframe] = useState<string>('4H');
@@ -39,6 +48,25 @@ export const Signals: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingStep, setLoadingStep] = useState<string>('Inspecting screenshot quality...');
   const [error, setError] = useState<string | null>(null);
+
+  const fetchLiveSignal = useCallback(async () => {
+    setIsSignalLoading(true);
+    setSignalError(null);
+    try {
+      const res = await signalsApi.getAssetSignal(asset, timeframe.toLowerCase());
+      if (res && res.data) {
+        setCurrentSignal(res.data);
+      }
+    } catch (err: any) {
+      setSignalError('Analysis cannot currently be completed: Live market telemetry unavailable.');
+    } finally {
+      setIsSignalLoading(false);
+    }
+  }, [asset, timeframe]);
+
+  useEffect(() => {
+    fetchLiveSignal();
+  }, [fetchLiveSignal]);
 
   const handleImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -152,6 +180,54 @@ export const Signals: React.FC = () => {
     }
   };
 
+  // Helper for evidence strength styling
+  const getEvidenceStrengthClass = (strength?: string) => {
+    switch (strength) {
+      case 'Strong':
+        return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+      case 'Moderate':
+        return 'bg-teal-500/15 text-teal-300 border-teal-500/30';
+      case 'Weak':
+        return 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+      case 'Insufficient':
+      default:
+        return 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+    }
+  };
+
+  const getDirectionBadge = (dir?: string) => {
+    switch (dir?.toUpperCase()) {
+      case 'BULLISH':
+      case 'BUY':
+        return {
+          label: 'Bullish',
+          cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+          icon: TrendingUp,
+        };
+      case 'BEARISH':
+      case 'SELL':
+        return {
+          label: 'Bearish',
+          cls: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+          icon: TrendingDown,
+        };
+      case 'NEUTRAL':
+        return {
+          label: 'Neutral',
+          cls: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+          icon: Minus,
+        };
+      case 'NO_CLEAR_SIGNAL':
+      case 'NO CLEAR SIGNAL':
+      default:
+        return {
+          label: 'No Clear Signal',
+          cls: 'bg-ghost-card text-ghost-textMuted border-ghost-border',
+          icon: Compass,
+        };
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-6 py-2 animate-in fade-in duration-200">
       {/* Top Header */}
@@ -180,6 +256,150 @@ export const Signals: React.FC = () => {
             </button>
           </div>
         )}
+      </div>
+
+      {/* =================================================================== */}
+      {/* LIVE MARKET SIGNAL & EVIDENCE (Binance Spot)                        */}
+      {/* =================================================================== */}
+      <div className="p-6 rounded-2xl bg-ghost-card border border-ghost-border shadow-lg space-y-5">
+        {/* Market Selector Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-ghost-border/70 pb-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-xs font-bold text-ghost-sand uppercase tracking-wider">
+              Live Evidence Engine:
+            </span>
+            <div className="text-xs text-ghost-textMuted">
+              Market signals based on current market evidence.
+            </div>
+          </div>
+
+          <button
+            onClick={fetchLiveSignal}
+            disabled={isSignalLoading}
+            className="px-3.5 py-1.5 rounded-xl bg-ghost-card hover:bg-ghost-border text-xs font-semibold text-ghost-sand border border-ghost-border transition-colors flex items-center gap-2 disabled:opacity-50"
+            title="Refresh real Binance Spot market indicators"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-ghost-sand ${isSignalLoading ? 'animate-spin' : ''}`} />
+            <span>Refresh Signal</span>
+          </button>
+        </div>
+
+        {signalError ? (
+          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>{signalError}</span>
+            </div>
+            <button
+              onClick={fetchLiveSignal}
+              className="px-3 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 font-semibold"
+            >
+              Retry
+            </button>
+          </div>
+        ) : isSignalLoading && !currentSignal ? (
+          <div className="py-6 text-center text-xs text-ghost-textMuted flex items-center justify-center gap-2">
+            <RefreshCw className="w-4 h-4 animate-spin text-ghost-sand" />
+            <span>Gathering live market evidence from Binance Spot...</span>
+          </div>
+        ) : currentSignal ? (
+          <div className="space-y-5">
+            {/* CURRENT SIGNAL CARD */}
+            <div className="p-4 rounded-xl bg-ghost-bg/70 border border-ghost-border space-y-3">
+              <div className="text-[11px] font-bold text-ghost-textMuted uppercase tracking-wider">
+                CURRENT SIGNAL
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="space-y-1.5">
+                  <div className="text-xs text-ghost-textMuted">
+                    Asset: <strong className="text-ghost-textPrimary font-semibold">{currentSignal.asset}</strong>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {(() => {
+                      const dir = getDirectionBadge(currentSignal.direction);
+                      const Icon = dir.icon;
+                      return (
+                        <span className={`px-3 py-1 rounded-lg text-xs font-bold border flex items-center gap-1.5 ${dir.cls}`}>
+                          <Icon className="w-3.5 h-3.5" />
+                          <span>{dir.label}</span>
+                        </span>
+                      );
+                    })()}
+                    <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${getEvidenceStrengthClass(currentSignal.evidence_strength)}`}>
+                      Evidence Strength: <strong>{currentSignal.evidence_strength || 'Moderate'}</strong>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-right text-xs text-ghost-textMuted space-y-0.5">
+                  <div>
+                    Updated: <strong className="text-ghost-sand font-medium">{currentSignal.freshness?.updated_seconds_ago ?? 0} seconds ago</strong>
+                  </div>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    <span>Data: <strong className="text-emerald-400 font-medium">Live</strong></span>
+                    <span>•</span>
+                    <span>Source: <strong className="text-ghost-textPrimary font-medium">{currentSignal.freshness?.source || 'Binance Spot'}</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* WHY? */}
+            <div className="space-y-2.5">
+              <h3 className="text-xs font-bold text-ghost-textMuted uppercase tracking-wider">
+                WHY?
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-1">
+                  <span className="text-[11px] font-bold text-ghost-sand block">Momentum</span>
+                  <p className="text-xs text-ghost-textPrimary leading-relaxed">
+                    {currentSignal.evidence_summary?.momentum || 'Momentum telemetry computed from RSI and MACD.'}
+                  </p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-1">
+                  <span className="text-[11px] font-bold text-ghost-sand block">Trend</span>
+                  <p className="text-xs text-ghost-textPrimary leading-relaxed">
+                    {currentSignal.evidence_summary?.trend || 'Price trend relative to 20/50 period averages.'}
+                  </p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-1">
+                  <span className="text-[11px] font-bold text-ghost-sand block">Volume</span>
+                  <p className="text-xs text-ghost-textPrimary leading-relaxed">
+                    {currentSignal.evidence_summary?.volume || 'Volume volume ratio relative to 20-period average.'}
+                  </p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-1">
+                  <span className="text-[11px] font-bold text-ghost-sand block">Volatility</span>
+                  <p className="text-xs text-ghost-textPrimary leading-relaxed">
+                    {currentSignal.evidence_summary?.volatility || 'ATR volatility regime classification.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* WHAT COULD INVALIDATE THIS? */}
+            <div className="space-y-2 pt-2 border-t border-ghost-border/40">
+              <h3 className="text-xs font-bold text-ghost-textMuted uppercase tracking-wider">
+                WHAT COULD INVALIDATE THIS?
+              </h3>
+              {currentSignal.what_could_invalidate && currentSignal.what_could_invalidate.length > 0 ? (
+                <div className="space-y-1.5">
+                  {currentSignal.what_could_invalidate.map((crit, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-xs text-ghost-textPrimary">
+                      <span className="w-1.5 h-1.5 rounded-full bg-ghost-sand mt-1.5 flex-shrink-0" />
+                      <span>{crit}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-ghost-textMuted">
+                  A decisive break of structural support or sharp volume divergence would invalidate this market stance.
+                </p>
+              )}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {error && (

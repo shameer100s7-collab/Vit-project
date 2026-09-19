@@ -55,6 +55,7 @@ export const Courtroom: React.FC = () => {
   const [currentCase, setCurrentCase] = useState<CourtroomCase | null>(null);
   const [recentCases, setRecentCases] = useState<CourtroomCase[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [loadingStep, setLoadingStep] = useState<string>('Convening court...');
   const [error, setError] = useState<string | null>(null);
 
@@ -100,10 +101,13 @@ export const Courtroom: React.FC = () => {
       const payload: CourtroomCaseCreate = {
         symbol,
         timeframe,
+        thesis: thesis.trim(),
         user_thesis: thesis.trim(),
+        notes: userNotes.trim() || undefined,
         user_notes: userNotes.trim() || undefined,
         support_level: supportLevel ? parseFloat(supportLevel) : undefined,
         resistance_level: resistanceLevel ? parseFloat(resistanceLevel) : undefined,
+        screenshot_data: screenshotPreview || undefined,
         chart_screenshot: screenshotPreview || undefined,
       };
 
@@ -121,6 +125,23 @@ export const Courtroom: React.FC = () => {
       setError(err?.message || 'Could not convene Courtroom inquest. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRefreshEvidence = async () => {
+    if (!currentCase) return;
+    setIsRefreshing(true);
+    setError(null);
+    try {
+      const res = await courtroomApi.refreshCase(currentCase.case_id);
+      if (res && res.data) {
+        setCurrentCase(res.data);
+        loadRecentCases();
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Could not refresh live market telemetry for this case.');
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -441,6 +462,15 @@ export const Courtroom: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleRefreshEvidence}
+              disabled={isRefreshing}
+              className="px-3.5 py-1.5 rounded-xl bg-ghost-card hover:bg-ghost-border text-xs font-semibold text-ghost-sand border border-ghost-border transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              title="Refresh live Binance Spot telemetry and re-evaluate courtroom arguments"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-ghost-sand ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>{isRefreshing ? 'Refreshing...' : 'Refresh Evidence'}</span>
+            </button>
             <button
               onClick={handleResetNewCase}
               className="px-3.5 py-1.5 rounded-xl bg-ghost-card hover:bg-ghost-border text-xs font-semibold text-ghost-textMuted hover:text-ghost-textPrimary border border-ghost-border transition-colors flex items-center gap-1.5"

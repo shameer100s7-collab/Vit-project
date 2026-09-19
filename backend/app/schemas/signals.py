@@ -111,6 +111,22 @@ class AggregatedSignalResult(BaseModel):
     )
     timeframe: str = Field(default="1h", description="Candle interval used")
     model_version: str = Field(default="v1.0", description="Signal engine version")
+    evidence_strength: str = Field(
+        default="Moderate",
+        description="Evidence strength category: Strong, Moderate, Weak, or Insufficient",
+    )
+    evidence_summary: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Structured traceable evidence breakdown across Momentum, Trend, Volume, and Volatility",
+    )
+    what_could_invalidate: List[str] = Field(
+        default_factory=list,
+        description="Objective verifiable conditions that would invalidate this signal",
+    )
+    freshness: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Signal freshness metadata including authoritative source and market data timestamp",
+    )
 
     @field_validator("confidence")
     @classmethod

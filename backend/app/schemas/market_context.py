@@ -101,4 +101,5 @@ class MarketContextResult(BaseModel):
     multi_timeframe_synthesis: Optional[str] = Field(None, description="Hierarchical multi-timeframe synthesis if provided")
     multi_timeframe_levels: Optional[List[MultiTimeframeLevel]] = Field(None, description="Timeframe structural breakdown")
     live_market_comparison: Optional[Dict[str, Any]] = Field(None, description="Comparison with live Binance Spot ticker if available")
+    visual_analysis: Optional[Dict[str, Any]] = Field(None, description="Detailed visual chart telemetry and cross-check")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Analysis generation timestamp")

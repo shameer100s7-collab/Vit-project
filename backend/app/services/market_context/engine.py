@@ -22,6 +22,7 @@ from app.schemas.market_context import (
     TimeframeScreenshot,
 )
 from app.services.feature_engine.feature_builder import FeatureBuilder
+from app.services.market_context.image_analyzer import ChartImageAnalyzer
 from app.services.market_context.quality_gate import ScreenshotQualityGate
 
 
@@ -31,6 +32,7 @@ class MarketContextEngine:
     def __init__(self) -> None:
         self.feature_builder = FeatureBuilder()
         self.quality_gate = ScreenshotQualityGate()
+        self.image_analyzer = ChartImageAnalyzer()
 
     def analyze_context(
         self,
@@ -52,6 +54,24 @@ class MarketContextEngine:
             timeframe=timeframe,
             has_volume=has_volume,
         )
+
+        # Inspect visual properties if image decoded successfully
+        pil_img = None
+        if qg_result.quality_gate_passed:
+            try:
+                pil_img = self.quality_gate.decode_image(request.image_data)
+                is_chart, chart_msg = self.image_analyzer.is_recognizable_chart(pil_img)
+                if not is_chart:
+                    qg_result.quality_gate_passed = False
+                    qg_result.reasons.append(chart_msg)
+                    qg_result.error_title = "CHART NOT RECOGNIZED"
+                    qg_result.error_message = (
+                        f"The uploaded image could not be verified as a financial chart: {chart_msg} "
+                        "Please upload a clear screenshot of a candlestick or line chart."
+                    )
+            except Exception as exc:
+                qg_result.quality_gate_passed = False
+                qg_result.reasons.append(f"Image inspection failed: {exc}")
 
         # If quality gate fails, return early with zero hallucinated analysis
         if not qg_result.quality_gate_passed:
@@ -93,6 +113,18 @@ class MarketContextEngine:
         if not qg_result.volume_visible:
             limitations.append("Volume context unavailable from this screenshot.")
 
+        visual_obs: Optional[Dict[str, Any]] = None
+        live_cross_check: Optional[Dict[str, Any]] = None
+        if pil_img:
+            visual_obs = self.image_analyzer.extract_visual_observations(pil_img, has_volume=qg_result.volume_visible)
+            live_cross_check, _ = self.image_analyzer.cross_check_with_live_data(
+                observations=visual_obs,
+                live_price=live_price,
+                live_volume=ticker_24h,
+                asset=asset,
+                timeframe=timeframe,
+            )
+
         # Analyze real market candles if provided
         if candles and len(candles) >= 5:
             df = self.feature_builder.build_feature_matrix(candles)
@@ -102,11 +134,12 @@ class MarketContextEngine:
                 has_volume=qg_result.volume_visible,
             )
         else:
-            # Fallback to visual-only estimation if historical candles are not provided
+            # Deterministic visual estimation derived from image pixels
             limitations.append("External historical candles unavailable; analysis based strictly on screenshot observation.")
             market_map, market_state, supporting, conflicting, current_ctx, what_watch = self._evaluate_visual_defaults(
                 timeframe=timeframe,
                 has_volume=qg_result.volume_visible,
+                visual_obs=visual_obs,
             )
 
         # 3. Multi-Timeframe Hierarchical Synthesis (if secondary screenshots provided)
@@ -120,8 +153,8 @@ class MarketContextEngine:
             )
 
         # 4. Live Market Telemetry Cross-Check
-        live_comparison: Optional[Dict[str, Any]] = None
-        if live_price and live_price.price:
+        live_comparison: Optional[Dict[str, Any]] = live_cross_check
+        if not live_comparison and live_price and live_price.price:
             live_comparison = {
                 "live_price": live_price.price,
                 "source": live_price.source or "Binance Spot",
@@ -144,6 +177,7 @@ class MarketContextEngine:
             multi_timeframe_synthesis=mtf_synthesis,
             multi_timeframe_levels=mtf_levels,
             live_market_comparison=live_comparison,
+            visual_analysis=visual_obs,
             timestamp=now,
         )
 
@@ -322,41 +356,67 @@ class MarketContextEngine:
         self,
         timeframe: str,
         has_volume: bool,
+        visual_obs: Optional[Dict[str, Any]] = None,
     ) -> Tuple[MarketMap, MarketStateContext, List[str], List[str], str, List[str]]:
-        """Fallback evaluation for visual-only screenshot analysis."""
+        """Evaluation derived dynamically from deterministic visual chart analysis."""
+        trend_dir = visual_obs.get("trend_direction", "Sideways / Horizontal") if visual_obs else "Sideways / Horizontal"
+        trend_obs = visual_obs.get("trend_observation", f"Price structure on {timeframe} is consolidating.") if visual_obs else f"Price structure on {timeframe} is consolidating."
+        struct_obs = visual_obs.get("structure_observation", "Range-bound rotation observed.") if visual_obs else "Range-bound rotation observed."
+        color_bias = visual_obs.get("color_bias", "Balanced candle distribution.") if visual_obs else "Balanced candle distribution."
+        vol_obs = visual_obs.get("volume_observation", "Volume context visible in lower pane." if has_volume else "Volume context unavailable from this screenshot.") if visual_obs else ("Volume context visible in lower pane." if has_volume else "Volume context unavailable from this screenshot.")
+        ind_obs = visual_obs.get("indicator_observation", "") if visual_obs else ""
+
+        if trend_dir == "Upward / Ascending":
+            state = MarketContextState.EXPANDING
+            state_summary = f"Ascending structural progression observed across visible bars on the {timeframe} timeframe."
+        elif trend_dir == "Downward / Descending":
+            state = MarketContextState.EXPANDING
+            state_summary = f"Descending structural progression observed across visible bars on the {timeframe} timeframe."
+        elif trend_dir == "Sideways / Horizontal":
+            state = MarketContextState.COMPRESSING
+            state_summary = f"Horizontal range consolidation observed within the visible envelope on {timeframe}."
+        else:
+            state = MarketContextState.MIXED_UNCLEAR
+            state_summary = f"Mixed or rotational structural behavior visible on the {timeframe} timeframe."
+
         market_map = MarketMap(
-            price="Price has moved into upper portion of the visible consolidation range.",
-            structure=f"Structural sequence on {timeframe} is testing prior swing reference boundaries.",
-            time=f"Move duration reflects an established multi-candle leg on the {timeframe} interval.",
-            volume="Volume context visible in lower pane." if has_volume else "Volume context unavailable from this screenshot.",
-            range="Candle ranges reflect moderate volatility expansion following compression.",
-            location="Price is located near the upper third of the visible chart frame.",
-            candle_behavior="Recent candles exhibit directional bodies with mild upper wick hesitation.",
+            price="Price not reliably readable from the uploaded image.",
+            structure=f"{struct_obs} ({timeframe})",
+            time=f"Visual sequence reflects the active leg on the {timeframe} timeframe.",
+            volume=vol_obs,
+            range="Range amplitude derived from observable candle pixel geometry.",
+            location="Price interacts with the active envelope defined by visible candle extrema.",
+            candle_behavior=f"{color_bias}. Candle bodies and wicks reflect active two-sided trade.",
         )
         market_state = MarketStateContext(
-            state=MarketContextState.EXPANDING,
-            summary=f"Price is expanding outward from previous compression on the {timeframe} timeframe.",
+            state=state,
+            summary=state_summary,
         )
         supporting = [
-            "Candle bodies reflect directional expansion over recent bars.",
-            "Price holds above intermediate consolidation base.",
-            "Range width has broadened compared to preceding compression candles.",
+            trend_obs,
+            f"Candle balance: {color_bias}",
+            struct_obs,
         ]
+        if has_volume and "unavailable" not in vol_obs.lower():
+            supporting.append(vol_obs)
+        if ind_obs:
+            supporting.append(ind_obs)
+
         conflicting = [
-            "Upper wicks indicate responsive selling near visible resistance.",
-            "Absence of secondary timeframe confirmation limits broader structural certainty.",
+            "Exact price labels and tick numbers are not reliably readable from pixels; cross-referencing live data is required.",
+            "Visual candle extrema may represent localized pause rather than macro turning points.",
         ]
         current_ctx = (
-            f"The market is currently expanding on the {timeframe} timeframe following recent compression. "
-            f"Price is trading near the upper structural boundary of the visible sequence. "
-            f"Confirmation of continuation requires observable acceptance above visible resistance."
+            f"Visual analysis indicates {state_summary.lower()} "
+            f"{trend_obs} "
+            f"Exact price levels and indicators (RSI/MACD) should be verified against live exchange telemetry."
         )
         what_watch = [
-            "Acceptance above the visible structural high would confirm expansion continuity.",
-            "A return into the prior compression range would signal a failed breakout attempt.",
-            "Volume contraction during subsequent candles would suggest diminishing participation.",
+            "Decisive breakout and candle acceptance outside the visible envelope boundaries.",
+            "Color dominance shift (e.g. surge in opposing candle volume) signaling exhaustion.",
+            "Contraction in visible candle body ranges signaling impending volatility expansion.",
         ]
-        return market_map, market_state, supporting, conflicting, current_ctx, what_watch
+        return market_map, market_state, supporting[:4], conflicting[:4], current_ctx, what_watch
 
     def _build_multi_timeframe_synthesis(
         self,

@@ -243,6 +243,20 @@ export interface StrategySignal {
   metrics: Record<string, any>;
 }
 
+export interface SignalEvidenceSummary {
+  momentum: string;
+  trend: string;
+  volume: string;
+  volatility: string;
+}
+
+export interface SignalFreshness {
+  source: string;
+  timestamp: string;
+  updated_seconds_ago: number;
+  is_stale: boolean;
+}
+
 export interface AggregatedSignalResult {
   asset: string;
   timestamp: string;
@@ -251,6 +265,10 @@ export interface AggregatedSignalResult {
   strength: number;
   time_horizon: TimeHorizon;
   market_state: string;
+  evidence_strength?: 'Strong' | 'Moderate' | 'Weak' | 'Insufficient';
+  evidence_summary?: SignalEvidenceSummary;
+  what_could_invalidate?: string[];
+  freshness?: SignalFreshness;
   consensus_metrics: {
     strategies_evaluated: number;
     directional_scores: Record<string, number>;

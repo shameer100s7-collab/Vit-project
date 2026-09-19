@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class EvidenceHierarchy(str, Enum):
@@ -109,6 +109,18 @@ class CourtroomCaseCreate(BaseModel):
     support_level: Optional[float] = Field(None, description="Optional user-provided support level")
     resistance_level: Optional[float] = Field(None, description="Optional user-provided resistance level")
     screenshot_data: Optional[str] = Field(None, description="Optional client-uploaded chart image (base64)")
+
+    @model_validator(mode="before")
+    @classmethod
+    def resolve_aliases(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "thesis" not in data and "user_thesis" in data:
+                data["thesis"] = data["user_thesis"]
+            if "notes" not in data and "user_notes" in data:
+                data["notes"] = data["user_notes"]
+            if "screenshot_data" not in data and "chart_screenshot" in data:
+                data["screenshot_data"] = data["chart_screenshot"]
+        return data
 
 
 class CourtroomCase(BaseModel):

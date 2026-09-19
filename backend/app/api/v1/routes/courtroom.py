@@ -67,6 +67,33 @@ async def get_courtroom_case(
     )
 
 
+@router.post(
+    "/cases/{case_id}/refresh",
+    response_model=StandardSuccessResponse[CourtroomCase],
+    summary="Refresh Courtroom Case Evidence",
+    description="Fetches live market telemetry and re-evaluates adversarial arguments for an existing case.",
+)
+async def refresh_courtroom_case(
+    case_id: str,
+    service: CourtroomService = Depends(get_courtroom_service),
+    request_id: str = Depends(get_request_id),
+) -> StandardSuccessResponse[CourtroomCase]:
+    """Refreshes an existing Courtroom case with updated live market evidence."""
+    case = await service.refresh_case(case_id)
+    return StandardSuccessResponse(
+        success=True,
+        data=case,
+        metadata={
+            "request_id": request_id,
+            "case_id": case.case_id,
+            "symbol": case.symbol,
+            "verdict": case.verdict.value,
+            "evidence_count": case.evidence_count,
+            "refreshed": True,
+        },
+    )
+
+
 @router.get(
     "/cases",
     response_model=StandardSuccessResponse[List[CourtroomCase]],

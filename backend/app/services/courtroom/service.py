@@ -118,6 +118,55 @@ class CourtroomService:
 
         return case
 
+    async def refresh_case(self, case_id: str) -> CourtroomCase:
+        """Refreshes live market telemetry and re-evaluates adversarial arguments for an existing case."""
+        case = await self.get_case(case_id)
+        symbol = case.symbol.upper().replace("/", "").replace("-", "").strip()
+        timeframe = case.timeframe.strip()
+
+        logger.info("Refreshing Courtroom case [%s] for %s on %s timeframe...", case.case_id, symbol, timeframe)
+
+        candles_task = self.market_data_service.get_ohlcv(symbol, timeframe=timeframe, limit=100)
+        ticker_task = self.market_data_service.get_volume_24h(symbol)
+        price_task = self.market_data_service.get_current_price(symbol)
+        orderbook_task = self.market_data_service.get_orderbook(symbol, depth=20)
+
+        candles, ticker, price, order_book = await asyncio.gather(
+            candles_task, ticker_task, price_task, orderbook_task, return_exceptions=True
+        )
+
+        if isinstance(candles, Exception) or not candles:
+            raise ValidationException(f"Live market data unavailable for symbol '{symbol}': {candles}")
+
+        if isinstance(ticker, Exception):
+            ticker = None
+        if isinstance(price, Exception):
+            price = None
+        if isinstance(order_book, Exception):
+            order_book = None
+
+        submission = CourtroomCaseCreate(
+            symbol=case.symbol,
+            timeframe=case.timeframe,
+            thesis=case.user_thesis,
+            notes=case.user_notes,
+        )
+
+        refreshed_case = self.engine.evaluate_case(
+            case_id=case.case_id,
+            submission=submission,
+            candles=candles,
+            ticker=ticker,
+            price=price,
+            order_book=order_book,
+        )
+
+        async with self._lock:
+            self._cases[case.case_id] = refreshed_case
+            self._cases[case.case_id.upper()] = refreshed_case
+
+        return refreshed_case
+
     async def list_cases(self, limit: int = 20) -> List[CourtroomCase]:
         """Retrieves recent Courtroom cases ordered by inception time descending."""
         async with self._lock:
