@@ -1,7 +1,7 @@
 """Application configuration module using Pydantic Settings."""
 
 import json
-from typing import Any, List, Union
+from typing import Any, List, Optional, Union
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -49,12 +49,21 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "console"  # "console" or "json"
 
-    # Database Infrastructure (Phase 2 readiness)
+    # Database Infrastructure
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "ghost_db"
     POSTGRES_USER: str = "ghost_user"
     POSTGRES_PASSWORD: str = ""
+    DATABASE_URL: Optional[str] = None
+
+    @property
+    def async_database_url(self) -> str:
+        """Returns asynchronous SQLAlchemy database connection URL."""
+        if self.DATABASE_URL:
+            return self.DATABASE_URL
+        pwd = f":{self.POSTGRES_PASSWORD}" if self.POSTGRES_PASSWORD else ""
+        return f"postgresql+asyncpg://{self.POSTGRES_USER}{pwd}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     # Redis Cache Infrastructure (Phase 2 readiness)
     REDIS_HOST: str = "localhost"

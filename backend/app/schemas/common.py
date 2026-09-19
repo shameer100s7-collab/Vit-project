@@ -38,3 +38,4 @@ class HealthResponse(BaseModel):
         description="UTC timestamp of the health check",
     )
     environment: Optional[str] = Field(default="development", description="Current operating environment")
+    database: Optional[str] = Field(default=None, description="Database connection status")
