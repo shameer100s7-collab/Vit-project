@@ -42,7 +42,6 @@ export const App: React.FC = () => {
           <Route path="/risk-history" element={<Navigate to="/research" replace />} />
           <Route path="/optimization" element={<Navigate to="/research" replace />} />
           <Route path="/research" element={<Research />} />
-          <Route path="/settings" element={<div className="p-8 font-medium text-ghost-textMuted">Settings feature coming soon.</div>} />
         </Route>
       </Route>
 

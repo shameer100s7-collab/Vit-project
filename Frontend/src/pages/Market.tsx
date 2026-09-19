@@ -23,10 +23,12 @@ import {
   HardDrive,
   Activity,
   CheckCircle2,
+  Star,
 } from 'lucide-react';
+import { useMarket } from '../context/MarketContext';
 
 export const Market: React.FC = () => {
-  const [selectedSymbol, setSelectedSymbol] = useState<string>('BTC/USDT');
+  const { selectedSymbol, setSelectedSymbol, isWatchlisted, toggleWatchlist } = useMarket();
   const [timeframe, setTimeframe] = useState<string>('1h');
   const [activeTab, setActiveTab] = useState<'overview' | 'chart' | 'orderbook' | 'statistics'>('overview');
 
@@ -284,6 +286,17 @@ export const Market: React.FC = () => {
             <span className="text-base font-bold text-ghost-textPrimary font-mono">
               {selectedSymbol}
             </span>
+            <button
+              onClick={() => toggleWatchlist(selectedSymbol)}
+              className={`p-1.5 rounded-lg border transition-colors ${
+                isWatchlisted(selectedSymbol)
+                  ? 'bg-ghost-sand/15 text-ghost-sand border-ghost-sand/30'
+                  : 'bg-ghost-bg text-ghost-textMuted border-ghost-border/40 hover:text-ghost-sand'
+              }`}
+              title={isWatchlisted(selectedSymbol) ? 'Remove from Watchlist' : 'Add to Watchlist'}
+            >
+              <Star className={`w-3.5 h-3.5 ${isWatchlisted(selectedSymbol) ? 'fill-ghost-sand' : ''}`} />
+            </button>
             {/* Subtle Live Freshness Indicator */}
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-ghost-bg border border-ghost-border/60 text-[11px] text-ghost-textMuted">
               <span className={`w-1.5 h-1.5 rounded-full ${isLiveStreamConnected ? 'bg-emerald-400 animate-pulse' : 'bg-ghost-textMuted'}`} />

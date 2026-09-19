@@ -365,9 +365,15 @@ class BinanceMarketDataProvider(MarketDataProvider):
                 TradableSymbolItem(symbol="ETHUSDT", display_symbol="ETH/USDT", base_asset="ETH", quote_asset="USDT", price_precision=2, quantity_precision=4, min_order_quantity=0.0001),
                 TradableSymbolItem(symbol="SOLUSDT", display_symbol="SOL/USDT", base_asset="SOL", quote_asset="USDT", price_precision=2, quantity_precision=2, min_order_quantity=0.01),
                 TradableSymbolItem(symbol="BNBUSDT", display_symbol="BNB/USDT", base_asset="BNB", quote_asset="USDT", price_precision=2, quantity_precision=3, min_order_quantity=0.001),
+                TradableSymbolItem(symbol="XRPUSDT", display_symbol="XRP/USDT", base_asset="XRP", quote_asset="USDT", price_precision=4, quantity_precision=1, min_order_quantity=0.1),
                 TradableSymbolItem(symbol="ADAUSDT", display_symbol="ADA/USDT", base_asset="ADA", quote_asset="USDT", price_precision=4, quantity_precision=1, min_order_quantity=0.1),
+                TradableSymbolItem(symbol="DOGEUSDT", display_symbol="DOGE/USDT", base_asset="DOGE", quote_asset="USDT", price_precision=5, quantity_precision=0, min_order_quantity=1.0),
                 TradableSymbolItem(symbol="AVAXUSDT", display_symbol="AVAX/USDT", base_asset="AVAX", quote_asset="USDT", price_precision=2, quantity_precision=2, min_order_quantity=0.01),
                 TradableSymbolItem(symbol="LINKUSDT", display_symbol="LINK/USDT", base_asset="LINK", quote_asset="USDT", price_precision=3, quantity_precision=2, min_order_quantity=0.01),
+                TradableSymbolItem(symbol="DOTUSDT", display_symbol="DOT/USDT", base_asset="DOT", quote_asset="USDT", price_precision=3, quantity_precision=2, min_order_quantity=0.01),
+                TradableSymbolItem(symbol="NEARUSDT", display_symbol="NEAR/USDT", base_asset="NEAR", quote_asset="USDT", price_precision=3, quantity_precision=1, min_order_quantity=0.1),
+                TradableSymbolItem(symbol="SUIUSDT", display_symbol="SUI/USDT", base_asset="SUI", quote_asset="USDT", price_precision=4, quantity_precision=1, min_order_quantity=0.1),
+                TradableSymbolItem(symbol="LTCUSDT", display_symbol="LTC/USDT", base_asset="LTC", quote_asset="USDT", price_precision=2, quantity_precision=3, min_order_quantity=0.001),
             ]
 
     async def get_asset_metadata(self, symbol: str) -> CanonicalAssetMetadata:

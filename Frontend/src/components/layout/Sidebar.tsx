@@ -7,7 +7,6 @@ import {
   Zap,
   PieChart,
   BookOpen,
-  Settings,
   ShieldCheck,
   ChevronLeft,
   ChevronRight,
@@ -21,10 +20,6 @@ const MAIN_NAV = [
   { path: '/portfolio-risk', label: 'Portfolio', icon: PieChart },
   { path: '/research', label: 'Research', icon: BookOpen },
   { path: '/courtroom', label: 'Courtroom', icon: Scale },
-];
-
-const SECONDARY_NAV = [
-  { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export interface SidebarProps {
@@ -64,43 +59,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
                 {!isCollapsed && <span className="ml-3 truncate">{item.label}</span>}
 
                 {/* Collapsed Tooltip Hint */}
-                {isCollapsed && (
-                  <div className="absolute left-full ml-3 px-2.5 py-1 bg-ghost-darkest border border-ghost-border rounded-lg text-[11px] text-ghost-textPrimary font-semibold whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg">
-                    {item.label}
-                  </div>
-                )}
-              </NavLink>
-            );
-          })}
-        </div>
-
-        {/* Divider */}
-        <div className="px-2">
-          <hr className="border-ghost-border/50" />
-        </div>
-
-        {/* Secondary Navigation (Settings) */}
-        <div className="space-y-1.5">
-          {SECONDARY_NAV.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                title={isCollapsed ? item.label : undefined}
-                className={({ isActive }) =>
-                  `group relative flex items-center ${
-                    isCollapsed ? 'justify-center px-0' : 'px-3.5'
-                  } py-2.5 rounded-xl transition-all duration-200 font-medium text-xs tracking-wide ${
-                    isActive
-                      ? 'bg-ghost-burgundy/30 text-ghost-sand border border-ghost-burgundyLight/50 font-semibold'
-                      : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/50'
-                  }`
-                }
-              >
-                <Icon className="w-4 h-4 flex-shrink-0" />
-                {!isCollapsed && <span className="ml-3 truncate">{item.label}</span>}
-
                 {isCollapsed && (
                   <div className="absolute left-full ml-3 px-2.5 py-1 bg-ghost-darkest border border-ghost-border rounded-lg text-[11px] text-ghost-textPrimary font-semibold whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg">
                     {item.label}

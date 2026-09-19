@@ -4,37 +4,42 @@ import {
   signalsApi,
   balanceService,
   BalanceItem,
-  marketApi,
 } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
-import { useLivePrice } from '../hooks/useLivePrice';
-import { AggregatedSignalResult, CanonicalVolume } from '../types';
+import { useMarket } from '../context/MarketContext';
+import { AggregatedSignalResult } from '../types';
 import {
   Zap,
   ShieldAlert,
   ArrowRight,
   Wallet,
   Scale,
+  Plus,
+  X,
+  TrendingUp,
+  TrendingDown,
+  Search,
 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile } = useProfile();
+  const {
+    markets,
+    watchlist,
+    addToWatchlist,
+    removeFromWatchlist,
+    liveSnapshots,
+    getLivePrice,
+    setSelectedSymbol,
+  } = useMarket();
 
   const [balances, setBalances] = useState<BalanceItem[]>([]);
   const [signal, setSignal] = useState<AggregatedSignalResult | null>(null);
-
-  // Live prices for top assets
-  const btcPrice = useLivePrice('BTC/USDT');
-  const ethPrice = useLivePrice('ETH/USDT');
-  const solPrice = useLivePrice('SOL/USDT');
-
-  // 24h market stats
-  const [btcVol, setBtcVol] = useState<CanonicalVolume | null>(null);
-  const [ethVol, setEthVol] = useState<CanonicalVolume | null>(null);
-  const [solVol, setSolVol] = useState<CanonicalVolume | null>(null);
+  const [isAddMarketOpen, setIsAddMarketOpen] = useState<boolean>(false);
+  const [marketSearchQuery, setMarketSearchQuery] = useState<string>('');
 
   useEffect(() => {
     balanceService.getBalances().then(setBalances).catch(() => setBalances([]));
@@ -42,24 +47,44 @@ export const Dashboard: React.FC = () => {
       .getAssetSignal('BTC/USDT')
       .then((res: any) => setSignal(res.data))
       .catch(() => setSignal(null));
-
-    marketApi.getVolume('BTC/USDT').then((r) => setBtcVol(r.data)).catch(() => null);
-    marketApi.getVolume('ETH/USDT').then((r) => setEthVol(r.data)).catch(() => null);
-    marketApi.getVolume('SOL/USDT').then((r) => setSolVol(r.data)).catch(() => null);
   }, []);
 
-  // Compute total portfolio value
+  // Compute total portfolio value with dynamic market prices
   const portfolioValue = useMemo(() => {
     let total = 0;
     balances.forEach((b) => {
       const sym = b.symbol.toUpperCase();
-      if (sym.includes('BTC') && btcPrice) total += btcPrice * b.quantity;
-      else if (sym.includes('ETH') && ethPrice) total += ethPrice * b.quantity;
-      else if (sym.includes('SOL') && solPrice) total += solPrice * b.quantity;
-      else if (sym.includes('USDT')) total += b.quantity;
+      if (sym.includes('USDT') || sym.includes('USDC') || sym.includes('DAI') || sym.includes('FDUSD')) {
+        total += b.quantity;
+      } else {
+        const live = getLivePrice(sym);
+        if (live) {
+          total += live * b.quantity;
+        } else if (sym.includes('BTC')) {
+          total += (getLivePrice('BTCUSDT') || 84000) * b.quantity;
+        } else if (sym.includes('ETH')) {
+          total += (getLivePrice('ETHUSDT') || 3400) * b.quantity;
+        } else if (sym.includes('SOL')) {
+          total += (getLivePrice('SOLUSDT') || 180) * b.quantity;
+        }
+      }
     });
-    return total > 0 ? total : 24820.4; // Realistic baseline if wallet unlinked
-  }, [balances, btcPrice, ethPrice, solPrice]);
+    return total > 0 ? total : 24820.4; // Baseline if wallet unlinked
+  }, [balances, getLivePrice]);
+
+  // Available markets not yet in watchlist
+  const availableToAdd = useMemo(() => {
+    const q = marketSearchQuery.toLowerCase();
+    return markets.filter((m) => {
+      const notInWatchlist = !watchlist.includes(m.symbol);
+      const matches =
+        m.symbol.toLowerCase().includes(q) ||
+        m.displaySymbol.toLowerCase().includes(q) ||
+        m.name.toLowerCase().includes(q) ||
+        m.baseAsset.toLowerCase().includes(q);
+      return notInWatchlist && matches;
+    });
+  }, [markets, watchlist, marketSearchQuery]);
 
   // Risk parameters
   const capital = profile?.capital || 25000;
@@ -72,6 +97,11 @@ export const Dashboard: React.FC = () => {
   const greeting =
     greetingHour < 12 ? 'Good morning' : greetingHour < 18 ? 'Good afternoon' : 'Good evening';
   const displayName = user?.email ? user.email.split('@')[0] : 'Investor';
+
+  const handleSelectMarket = (symbol: string) => {
+    setSelectedSymbol(symbol);
+    navigate('/market');
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 font-sans">
@@ -138,101 +168,206 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Market Snapshot Cards (BTC, ETH, SOL) */}
+      {/* 3. Tracked Markets Grid with Real-Time Data */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold text-ghost-textMuted uppercase tracking-wider">
-            Markets
-          </h2>
-          <button
-            onClick={() => navigate('/market')}
-            className="text-xs font-semibold text-ghost-sand hover:underline flex items-center gap-1"
-          >
-            <span>All markets</span>
-            <ArrowRight className="w-3 h-3" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* BTC */}
-          <div
-            onClick={() => navigate('/market')}
-            className="p-5 rounded-2xl bg-ghost-card border border-ghost-border/70 hover:border-ghost-sand/40 hover:bg-ghost-cardHover transition-all cursor-pointer shadow-xs space-y-2"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-ghost-textPrimary">BTC / USDT</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono text-ghost-textMuted bg-ghost-bg border border-ghost-border/40">
-                Binance
-              </span>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-xl font-bold font-mono text-ghost-sand">
-                {btcPrice ? `$${btcPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$84,210.00'}
-              </span>
-              <span
-                className={`inline-flex items-center text-xs font-bold font-mono ${
-                  (btcVol?.price_change_pct_24h ?? 1.15) >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                }`}
-              >
-                {(btcVol?.price_change_pct_24h ?? 1.15) >= 0 ? '+' : ''}
-                {(btcVol?.price_change_pct_24h ?? 1.15).toFixed(2)}%
-              </span>
-            </div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-bold text-ghost-textMuted uppercase tracking-wider">
+              Tracked Markets
+            </h2>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-ghost-bg border border-ghost-border text-ghost-sand">
+              {watchlist.length} active
+            </span>
           </div>
-
-          {/* ETH */}
-          <div
-            onClick={() => navigate('/market')}
-            className="p-5 rounded-2xl bg-ghost-card border border-ghost-border/70 hover:border-ghost-sand/40 hover:bg-ghost-cardHover transition-all cursor-pointer shadow-xs space-y-2"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-ghost-textPrimary">ETH / USDT</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono text-ghost-textMuted bg-ghost-bg border border-ghost-border/40">
-                Binance
-              </span>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-xl font-bold font-mono text-ghost-sand">
-                {ethPrice ? `$${ethPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$3,480.00'}
-              </span>
-              <span
-                className={`inline-flex items-center text-xs font-bold font-mono ${
-                  (ethVol?.price_change_pct_24h ?? 0.82) >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                }`}
-              >
-                {(ethVol?.price_change_pct_24h ?? 0.82) >= 0 ? '+' : ''}
-                {(ethVol?.price_change_pct_24h ?? 0.82).toFixed(2)}%
-              </span>
-            </div>
-          </div>
-
-          {/* SOL */}
-          <div
-            onClick={() => navigate('/market')}
-            className="p-5 rounded-2xl bg-ghost-card border border-ghost-border/70 hover:border-ghost-sand/40 hover:bg-ghost-cardHover transition-all cursor-pointer shadow-xs space-y-2"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-ghost-textPrimary">SOL / USDT</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono text-ghost-textMuted bg-ghost-bg border border-ghost-border/40">
-                Binance
-              </span>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-xl font-bold font-mono text-ghost-sand">
-                {solPrice ? `$${solPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$182.50'}
-              </span>
-              <span
-                className={`inline-flex items-center text-xs font-bold font-mono ${
-                  (solVol?.price_change_pct_24h ?? -0.32) >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                }`}
-              >
-                {(solVol?.price_change_pct_24h ?? -0.32) >= 0 ? '+' : ''}
-                {(solVol?.price_change_pct_24h ?? -0.32).toFixed(2)}%
-              </span>
-            </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsAddMarketOpen(true)}
+              className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-xl bg-ghost-card border border-ghost-border text-ghost-sand hover:border-ghost-sand/50 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add market</span>
+            </button>
+            <button
+              onClick={() => navigate('/market')}
+              className="text-xs font-semibold text-ghost-sand hover:underline flex items-center gap-1"
+            >
+              <span>All markets</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
           </div>
         </div>
+
+        {watchlist.length === 0 ? (
+          <div className="p-8 text-center rounded-2xl bg-ghost-card border border-ghost-border/70 space-y-3">
+            <p className="text-xs text-ghost-textMuted">No markets added to your watchlist yet.</p>
+            <button
+              onClick={() => setIsAddMarketOpen(true)}
+              className="px-4 py-2 rounded-xl bg-ghost-burgundy text-ghost-sand font-semibold text-xs border border-ghost-sand/30 hover:bg-[#6c1219] transition-all inline-flex items-center gap-2"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Track crypto markets</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {watchlist.map((sym) => {
+              const def = markets.find((m) => m.symbol === sym);
+              const snap = liveSnapshots[sym];
+              const display = def ? def.displaySymbol : sym;
+              const name = def?.name || def?.baseAsset || sym;
+              const price = snap?.price ?? 0;
+              const changePct = snap?.priceChangePercent24h ?? 0;
+              const isStale = snap?.freshness === 'STALE';
+              const isLive = snap?.freshness === 'LIVE';
+
+              return (
+                <div
+                  key={sym}
+                  onClick={() => handleSelectMarket(sym)}
+                  className="group relative p-5 rounded-2xl bg-ghost-card border border-ghost-border/70 hover:border-ghost-sand/40 hover:bg-ghost-cardHover transition-all cursor-pointer shadow-xs space-y-2.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-ghost-textPrimary font-mono">
+                        {display}
+                      </span>
+                      <span className="text-[11px] text-ghost-textMuted font-sans">
+                        {name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          isLive ? 'bg-emerald-400 animate-pulse' : isStale ? 'bg-amber-400' : 'bg-ghost-textMuted'
+                        }`}
+                        title={isLive ? 'Live WebSocket stream' : isStale ? 'Stale data (>15s)' : 'Waiting for tick'}
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFromWatchlist(sym);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-ghost-textMuted hover:text-rose-400 hover:bg-ghost-bg transition-all"
+                        title="Remove from watchlist"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-xl font-bold font-mono text-ghost-sand">
+                      {price > 0
+                        ? `$${price.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: price < 1 ? 4 : 2,
+                          })}`
+                        : 'Streaming...'}
+                    </span>
+
+                    {price > 0 && (
+                      <span
+                        className={`inline-flex items-center gap-0.5 text-xs font-bold font-mono px-2 py-0.5 rounded-full border ${
+                          changePct >= 0
+                            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                            : 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                        }`}
+                      >
+                        {changePct >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                        <span>{changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`}</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {/* Add Market Modal */}
+      {isAddMarketOpen && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-ghost-card border border-ghost-border rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-ghost-border">
+              <div>
+                <h3 className="text-base font-bold text-ghost-textPrimary">
+                  Add Markets to Watchlist
+                </h3>
+                <p className="text-xs text-ghost-textMuted">
+                  Select cryptocurrency pairs to monitor in real-time.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsAddMarketOpen(false)}
+                className="p-1.5 rounded-lg text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-bg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="w-4 h-4 text-ghost-textMuted absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search coin or pair (e.g. SOL, BNB, XRP)..."
+                value={marketSearchQuery}
+                onChange={(e) => setMarketSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-ghost-bg border border-ghost-border rounded-xl text-xs text-ghost-textPrimary placeholder:text-ghost-textMuted focus:outline-none focus:border-ghost-sand"
+                autoFocus
+              />
+            </div>
+
+            {/* Available Markets List */}
+            <div className="max-h-60 overflow-y-auto space-y-1 divide-y divide-ghost-border/30">
+              {availableToAdd.length === 0 ? (
+                <div className="p-4 text-center text-xs text-ghost-textMuted">
+                  {marketSearchQuery ? 'No matching cryptocurrencies found.' : 'All available markets are in your watchlist.'}
+                </div>
+              ) : (
+                availableToAdd.map((m) => (
+                  <div
+                    key={m.symbol}
+                    className="pt-1.5 pb-1.5 px-2 flex items-center justify-between hover:bg-ghost-cardHover rounded-lg transition-colors"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold font-mono text-ghost-textPrimary">
+                          {m.displaySymbol}
+                        </span>
+                        <span className="text-[11px] text-ghost-textMuted font-sans">
+                          {m.name}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-ghost-textMuted font-mono">
+                        Binance Spot · {m.quoteAsset}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => addToWatchlist(m.symbol)}
+                      className="px-3 py-1 rounded-lg bg-ghost-sand/15 text-ghost-sand border border-ghost-sand/30 hover:bg-ghost-sand/25 text-xs font-semibold transition-colors flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Track</span>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-ghost-border flex justify-end">
+              <button
+                onClick={() => setIsAddMarketOpen(false)}
+                className="px-4 py-2 rounded-xl bg-ghost-bg border border-ghost-border text-xs font-semibold text-ghost-textPrimary hover:border-ghost-sand/40 transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 4. Dual Section: Market Outlook & Risk Monitor */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

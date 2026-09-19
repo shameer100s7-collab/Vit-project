@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { portfolioService, PortfolioData, PortfolioAssetItem, riskApi } from '../api';
 import { PortfolioRiskResult } from '../types';
-import { useLivePrice } from '../hooks/useLivePrice';
+import { useMarket } from '../context/MarketContext';
 import { 
   PieChart, 
   ShieldAlert, 
@@ -62,18 +62,39 @@ export const PortfolioRisk: React.FC = () => {
   const [assetFormError, setAssetFormError] = useState<string | null>(null);
   const [assetSuccessMsg, setAssetSuccessMsg] = useState<string | null>(null);
 
-  // Live Prices from WebSocket
-  const btcPrice = useLivePrice('BTC/USDT');
-  const ethPrice = useLivePrice('ETH/USDT');
-  const solPrice = useLivePrice('SOL/USDT');
+  // Live Prices from centralized Market Universe
+  const { getLivePrice, liveSnapshots } = useMarket();
 
-  const priceMap: Record<string, number | null> = useMemo(() => ({
-    BTC: btcPrice || null,
-    ETH: ethPrice || null,
-    SOL: solPrice || null,
-    USDT: 1.0,
-    USDC: 1.0,
-  }), [btcPrice, ethPrice, solPrice]);
+  const priceMap: Record<string, number | null> = useMemo(() => {
+    const map: Record<string, number | null> = {
+      USDT: 1.0,
+      USDC: 1.0,
+      DAI: 1.0,
+      FDUSD: 1.0,
+    };
+
+    // Populate from all live snapshots
+    Object.keys(liveSnapshots).forEach((sym) => {
+      const snap = liveSnapshots[sym];
+      if (snap?.price) {
+        const base = sym.replace(/USDT$|USDC$/, '').toUpperCase();
+        map[base] = snap.price;
+        map[sym] = snap.price;
+      }
+    });
+
+    // Fallbacks for known portfolio assets
+    if (portfolio?.assets) {
+      portfolio.assets.forEach((a) => {
+        const base = a.symbol.replace(/USDT$|USDC$/, '').toUpperCase();
+        if (map[base] === undefined) {
+          map[base] = getLivePrice(base) || getLivePrice(`${base}USDT`);
+        }
+      });
+    }
+
+    return map;
+  }, [liveSnapshots, portfolio?.assets, getLivePrice]);
 
   const fetchPortfolioData = async () => {
     try {

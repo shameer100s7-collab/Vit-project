@@ -12,9 +12,11 @@ import {
 } from 'lucide-react';
 import { strategiesApi } from '../api';
 import { StrategyItem, VerificationBadgeType, StrategyCreatePayload } from '../types';
+import { useMarket } from '../context/MarketContext';
 
 export const Strategies: React.FC = () => {
   const navigate = useNavigate();
+  const { markets } = useMarket();
   const [strategies, setStrategies] = useState<StrategyItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -384,9 +386,11 @@ export const Strategies: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, asset: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl bg-ghost-bg border border-ghost-border text-ghost-textPrimary focus:outline-none focus:border-ghost-sand font-mono"
                   >
-                    <option value="BTC/USDT">BTC/USDT (Binance)</option>
-                    <option value="ETH/USDT">ETH/USDT (Binance)</option>
-                    <option value="SOL/USDT">SOL/USDT (Binance)</option>
+                    {markets.map((m) => (
+                      <option key={m.symbol} value={m.displaySymbol}>
+                        {m.displaySymbol} ({m.name || m.baseAsset})
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
