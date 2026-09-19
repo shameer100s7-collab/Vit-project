@@ -43,7 +43,7 @@ export const RiskDashboard: React.FC = () => {
             Risk Assessment
           </h1>
           <p className="text-sm text-ghost-textMuted mt-0.5">
-            Value at Risk (VaR), Expected Shortfall, Drawdown, and Position Sizing for {selectedSymbol}.
+            Quantitative risk profile and volatility metrics for {selectedSymbol}.
           </p>
         </div>
 

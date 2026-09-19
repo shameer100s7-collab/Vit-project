@@ -8,3 +8,5 @@ export * from './behavior';
 export * from './risk';
 export * from './livePriceService';
 export * from './balanceService';
+export * from './profileService';
+export * from './portfolioService';

@@ -46,12 +46,18 @@ export const RiskBadge: React.FC<BadgeProps> = ({ label, size = 'md' }) => {
     return 'bg-slate-800/80 text-slate-300 border border-slate-700/60';
   };
 
+    const humanized = 
+      normalized === 'BULLISH_TREND' ? 'Positive' :
+      normalized === 'BEARISH_TREND' ? 'Negative' :
+      normalized === 'SIDEWAYS' ? 'Neutral' :
+      label.replace(/_/g, ' ');
+
   return (
     <span
       className={`inline-flex items-center rounded-md font-sans transition-colors ${getSizeClasses()} ${getColorClasses()}`}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-80" />
-      {label}
+      {humanized}
     </span>
   );
 };

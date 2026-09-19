@@ -49,7 +49,7 @@ export const Features: React.FC = () => {
             Market Analysis
           </h1>
           <p className="text-sm text-ghost-textMuted mt-0.5">
-            Technical indicators and market momentum factors for {selectedSymbol}.
+            Technical indicators and quantitative feature vectors for {selectedSymbol}.
           </p>
         </div>
 

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, Lock, Mail, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Lock, User, ArrowRight } from 'lucide-react';
 import { ErrorState } from '../components/common/ErrorState';
 
 export const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,7 +19,7 @@ export const Login: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      await login({ email, password });
+      await login({ email: username.trim(), username: username.trim(), password });
       navigate('/');
     } catch (err) {
       setError(err);
@@ -51,17 +51,22 @@ export const Login: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4 font-mono text-xs">
           <div>
-            <label className="block text-ghost-textMuted uppercase text-2xs mb-1.5 tracking-wider">
-              Operator Email
+            <label htmlFor="username" className="block text-ghost-textMuted uppercase text-2xs mb-1.5 tracking-wider">
+              Username
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-ghost-textMuted absolute left-3 top-1/2 -translate-y-1/2" />
+              <User className="w-4 h-4 text-ghost-textMuted absolute left-3 top-1/2 -translate-y-1/2" />
               <input
-                type="email"
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="operator@ghost.ai"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="test"
                 className="w-full pl-9 pr-3 py-2 bg-ghost-darkest border border-ghost-border rounded-lg text-ghost-textPrimary placeholder:text-ghost-textMuted/60 focus:outline-none focus:border-ghost-cyan transition-colors"
               />
             </div>
@@ -105,6 +110,10 @@ export const Login: React.FC = () => {
           <Link to="/register" className="text-ghost-cyan hover:underline font-semibold">
             Register Operator Account
           </Link>
+          <div className="mt-4 pt-4 border-t border-ghost-border/40">
+            <span className="block text-ghost-textMuted">Demo Account</span>
+            <span className="block font-semibold text-ghost-textPrimary">Username: test &nbsp;|&nbsp; Password: 12345678</span>
+          </div>
         </div>
       </div>
     </div>

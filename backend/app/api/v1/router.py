@@ -1,7 +1,7 @@
 """API v1 master router incorporating all sub-modules."""
 
 from fastapi import APIRouter
-from app.api.v1.routes import auth, behavior, health, intelligence, market, risk, signals
+from app.api.v1.routes import auth, behavior, health, intelligence, market, portfolio, risk, signals
 
 api_v1_router = APIRouter()
 
@@ -10,6 +10,9 @@ api_v1_router.include_router(health.router, tags=["Health"])
 
 # Authentication & Identity routes
 api_v1_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+
+# Portfolio & Wallet routes
+api_v1_router.include_router(portfolio.router, prefix="/portfolio", tags=["Portfolio"])
 
 # Market Data Engine routes
 api_v1_router.include_router(market.router, prefix="/market", tags=["Market Data"])

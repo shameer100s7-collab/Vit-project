@@ -146,7 +146,7 @@ export const ApiConsole: React.FC = () => {
           <span>Developer Tools</span>
         </div>
         <h1 className="text-2xl font-bold text-ghost-textPrimary tracking-tight flex items-center gap-3">
-          API Console
+          Developer Console
           <span className="text-xs px-2.5 py-0.5 bg-ghost-card border border-ghost-border text-ghost-textMuted rounded font-mono font-normal">
             Direct Backend Harness
           </span>

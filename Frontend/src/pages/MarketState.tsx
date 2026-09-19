@@ -43,7 +43,7 @@ export const MarketState: React.FC = () => {
             Market Outlook
           </h1>
           <p className="text-sm text-ghost-textMuted mt-0.5">
-            Macro regime classification and quantitative market outlook for {selectedSymbol}.
+            Current market momentum, volatility, and trend analysis for {selectedSymbol}.
           </p>
         </div>
 
@@ -87,8 +87,12 @@ export const MarketState: React.FC = () => {
               <div>
                 <span className="text-xs text-ghost-textMuted font-medium">Current Market Outlook</span>
                 <div className="flex items-center gap-3 mt-1">
-                  <h2 className="text-2xl font-bold text-ghost-textPrimary capitalize">
-                    {stateResult.state.replace('_', ' ')}
+                  <h2 className="text-2xl font-bold text-ghost-textPrimary">
+                    {stateResult.state === 'BULLISH_TREND' ? 'Positive momentum' :
+                     stateResult.state === 'BEARISH_TREND' ? 'Negative momentum' :
+                     stateResult.state === 'SIDEWAYS' ? 'Consolidation' :
+                     stateResult.state === 'HIGH_VOLATILITY' ? 'High volatility' :
+                     stateResult.state.replace('_', ' ')}
                   </h2>
                   <RiskBadge label={stateResult.state} size="lg" />
                 </div>

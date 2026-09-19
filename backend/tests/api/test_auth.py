@@ -8,8 +8,8 @@ from httpx import AsyncClient
 async def test_register_user_success(async_client: AsyncClient) -> None:
     """Verify successful user registration returns 201 Created and standard envelope."""
     payload = {
-        "email": "crypto_trader@ghost.io",
-        "password": "SuperSecretPassword123!",
+        "email": "test",
+        "password": "12345678",
         "full_name": "Satoshi Quant",
         "role": "USER",
     }
@@ -20,7 +20,7 @@ async def test_register_user_success(async_client: AsyncClient) -> None:
     assert body["success"] is True
     assert "data" in body
     data = body["data"]
-    assert data["email"] == "crypto_trader@ghost.io"
+    assert data["email"] == "test"
     assert data["full_name"] == "Satoshi Quant"
     assert data["role"] == "USER"
     assert data["is_active"] is True

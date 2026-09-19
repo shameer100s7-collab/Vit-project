@@ -55,7 +55,8 @@ export interface TokenResponse {
 }
 
 export interface UserLoginRequest {
-  email: string;
+  email?: string;
+  username?: string;
   password: string;
 }
 

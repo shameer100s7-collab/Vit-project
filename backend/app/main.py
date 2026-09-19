@@ -11,6 +11,8 @@ from app.core.exceptions import register_exception_handlers
 from app.core.logging import get_logger, setup_logging
 from app.core.middleware import RequestCorrelationMiddleware
 
+from app.db.seed import seed_development_user
+
 # Initialize logging system
 setup_logging(log_level=settings.LOG_LEVEL, log_format=settings.LOG_FORMAT)
 logger = get_logger("ghost.main")
@@ -25,6 +27,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         settings.VERSION,
         settings.ENV,
     )
+    if settings.ENV in ("development", "test", "dev"):
+        await seed_development_user()
     yield
     logger.info("Shutting down %s...", settings.PROJECT_NAME)
 

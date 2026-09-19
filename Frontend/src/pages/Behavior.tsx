@@ -47,7 +47,7 @@ export const Behavior: React.FC = () => {
             Market Activity
           </h1>
           <p className="text-sm text-ghost-textMuted mt-0.5">
-            Order book microstructure observations and participant activity for {selectedSymbol}.
+            Microstructure order flow imbalance and activity patterns for {selectedSymbol}.
           </p>
         </div>
 

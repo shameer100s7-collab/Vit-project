@@ -2,15 +2,15 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, EmailStr, Field
+from typing import Any, Optional
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 from app.db.models.user import UserRole
 
 
 class UserRegisterRequest(BaseModel):
     """Payload for user registration."""
-    email: EmailStr = Field(..., description="Unique email address")
+    email: str = Field(..., description="Unique email address or username")
     password: str = Field(..., min_length=8, description="Password must contain at least 8 characters")
     full_name: Optional[str] = Field(default=None, max_length=255, description="Full name or pseudonym")
     role: Optional[UserRole] = Field(default=UserRole.USER, description="Initial requested account role")
@@ -18,9 +18,19 @@ class UserRegisterRequest(BaseModel):
 
 class UserLoginRequest(BaseModel):
     """Payload for user login."""
-    email: EmailStr = Field(..., description="Registered email address")
+    email: Optional[str] = Field(default=None, description="Registered email address or username")
+    username: Optional[str] = Field(default=None, description="Username for login")
     password: str = Field(..., description="Plaintext password")
 
+    @model_validator(mode="before")
+    @classmethod
+    def resolve_username_or_email(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            identifier = data.get("username") or data.get("email")
+            if identifier:
+                data["email"] = identifier
+                data["username"] = identifier
+        return data
 
 class RefreshTokenRequest(BaseModel):
     """Payload for requesting new access token using refresh token."""
