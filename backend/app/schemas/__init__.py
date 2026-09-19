@@ -44,6 +44,20 @@ from app.schemas.signals import (
     StrategySignal,
     TimeHorizon,
 )
+from app.schemas.risk import (
+    AssetRiskResult,
+    ConcentrationMetrics,
+    DrawdownMetrics,
+    PortfolioAssetInput,
+    PortfolioRiskRequest,
+    PortfolioRiskResult,
+    PositionSizingRecommendation,
+    RiskAdjustedMetrics,
+    RiskHistoryItem,
+    RiskLevel,
+    SensitivityMetrics,
+    VaRMetrics,
+)
 
 __all__ = [
     "ErrorDetail",
@@ -78,4 +92,17 @@ __all__ = [
     "LiquidityPressure",
     "WhaleActivityIndicator",
     "BehaviorAnalysisResult",
+    "RiskLevel",
+    "VaRMetrics",
+    "DrawdownMetrics",
+    "RiskAdjustedMetrics",
+    "SensitivityMetrics",
+    "ConcentrationMetrics",
+    "PositionSizingRecommendation",
+    "AssetRiskResult",
+    "PortfolioAssetInput",
+    "PortfolioRiskRequest",
+    "PortfolioRiskResult",
+    "RiskHistoryItem",
 ]
+

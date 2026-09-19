@@ -1,6 +1,6 @@
 """Risk analysis persistence repository."""
 
-from typing import Optional
+from typing import List, Optional
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,3 +31,20 @@ class RiskRepository(BaseRepository[RiskAnalysis]):
         )
         result = await self.session.execute(query)
         return result.scalars().first()
+
+    async def get_recent_analyses(
+        self,
+        target_type: Optional[str] = None,
+        target_id: Optional[str] = None,
+        limit: int = 50,
+    ) -> List[RiskAnalysis]:
+        """Fetches recent risk analysis records, optionally filtered by target."""
+        query = select(RiskAnalysis)
+        if target_type:
+            query = query.where(RiskAnalysis.target_type == target_type.upper().strip())
+        if target_id:
+            query = query.where(RiskAnalysis.target_id == str(target_id).strip())
+        query = query.order_by(desc(RiskAnalysis.timestamp)).limit(limit)
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+

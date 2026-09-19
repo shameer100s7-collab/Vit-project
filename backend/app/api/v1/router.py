@@ -1,7 +1,7 @@
 """API v1 master router incorporating all sub-modules."""
 
 from fastapi import APIRouter
-from app.api.v1.routes import auth, behavior, health, intelligence, market, signals
+from app.api.v1.routes import auth, behavior, health, intelligence, market, risk, signals
 
 api_v1_router = APIRouter()
 
@@ -22,5 +22,9 @@ api_v1_router.include_router(signals.router, prefix="/signals", tags=["Signals"]
 
 # Observable Behavior Model routes
 api_v1_router.include_router(behavior.router, prefix="/behavior", tags=["Behavior"])
+
+# Quantitative Risk Engine routes
+api_v1_router.include_router(risk.router, prefix="/risk", tags=["Risk"])
+
 
 
