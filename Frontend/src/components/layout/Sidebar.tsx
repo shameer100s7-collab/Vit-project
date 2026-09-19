@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   TrendingUp,
+  Scale,
   Zap,
   PieChart,
   BookOpen,
@@ -12,6 +13,7 @@ import {
 const MAIN_NAV = [
   { path: '/', label: 'Overview', icon: LayoutDashboard },
   { path: '/market', label: 'Markets', icon: TrendingUp },
+  { path: '/courtroom', label: 'Courtroom', icon: Scale },
   { path: '/signals', label: 'Signals', icon: Zap },
   { path: '/portfolio-risk', label: 'Portfolio', icon: PieChart },
   { path: '/research', label: 'Research', icon: BookOpen },

@@ -10,6 +10,7 @@ import { Register } from './pages/Register';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { Onboarding } from './pages/Onboarding';
 import { Research } from './pages/Research';
+import { Courtroom } from './pages/Courtroom';
 
 export const App: React.FC = () => {
   return (
@@ -26,6 +27,8 @@ export const App: React.FC = () => {
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/market" element={<Market />} />
+          <Route path="/courtroom" element={<Courtroom />} />
+          <Route path="/courtroom/:caseId" element={<Courtroom />} />
           <Route path="/features" element={<Navigate to="/research" replace />} />
           <Route path="/market-state" element={<Navigate to="/research" replace />} />
           <Route path="/signals" element={<Signals />} />

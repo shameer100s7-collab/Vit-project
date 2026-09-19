@@ -58,6 +58,19 @@ from app.schemas.risk import (
     SensitivityMetrics,
     VaRMetrics,
 )
+from app.schemas.courtroom import (
+    CourtroomArgument,
+    CourtroomCase,
+    CourtroomCaseCreate,
+    CourtroomEvidenceItem,
+    CrossExaminationRow,
+    EvidenceDirection,
+    EvidenceHierarchy,
+    EvidenceStrength,
+    InvalidationCondition,
+    ThesisStance,
+    VerdictType,
+)
 
 __all__ = [
     "ErrorDetail",
@@ -104,5 +117,15 @@ __all__ = [
     "PortfolioRiskRequest",
     "PortfolioRiskResult",
     "RiskHistoryItem",
+    "CourtroomArgument",
+    "CourtroomCase",
+    "CourtroomCaseCreate",
+    "CourtroomEvidenceItem",
+    "CrossExaminationRow",
+    "EvidenceDirection",
+    "EvidenceHierarchy",
+    "EvidenceStrength",
+    "InvalidationCondition",
+    "ThesisStance",
+    "VerdictType",
 ]
-

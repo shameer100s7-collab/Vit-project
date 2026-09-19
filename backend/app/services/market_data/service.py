@@ -214,6 +214,13 @@ class MarketDataService:
         """Returns health probe metrics for the active provider."""
         return await self.provider.check_health()
 
+    # Convenient backward-compatible aliases
+    get_volume_24h = get_volume
+    get_latest_price = get_current_price
+    get_candles = get_ohlcv
+    get_order_book = get_orderbook
+
+
 
 # Singleton instance
 _market_data_service_instance: Optional[MarketDataService] = None
