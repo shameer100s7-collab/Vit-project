@@ -2,9 +2,10 @@
 
 import logging
 from typing import Any, Dict, Optional
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.logging import get_logger, request_id_ctx_var
 
@@ -172,8 +173,8 @@ def register_exception_handlers(app: FastAPI) -> None:
             ),
         )
 
-    @app.exception_handler(HTTPException)
-    async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    @app.exception_handler(StarletteHTTPException)
+    async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
         req_id = request_id_ctx_var.get()
         logger.warning("HTTPException: status=%d, detail=%s, path=%s", exc.status_code, exc.detail, request.url.path)
         code = "HTTP_ERROR"
@@ -183,6 +184,8 @@ def register_exception_handlers(app: FastAPI) -> None:
             code = "UNAUTHORIZED"
         elif exc.status_code == status.HTTP_403_FORBIDDEN:
             code = "FORBIDDEN"
+        elif exc.status_code == status.HTTP_405_METHOD_NOT_ALLOWED:
+            code = "METHOD_NOT_ALLOWED"
         return JSONResponse(
             status_code=exc.status_code,
             content=_build_error_payload(code, str(exc.detail), None, req_id),
