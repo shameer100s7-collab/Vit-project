@@ -9,14 +9,17 @@ import {
   Wallet as WalletIcon, 
   Plus, 
   RefreshCw, 
-  Edit3, 
   Trash2, 
-  X, 
   Check, 
   Info, 
-  Sparkles
+  Sparkles,
+  TrendingUp
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { PageHeader } from '../components/common/PageHeader';
+import { Card } from '../components/common/Card';
+import { Drawer } from '../components/common/Drawer';
+import { SkeletonCard } from '../components/common/Skeleton';
 
 const SUPPORTED_NETWORKS = [
   { name: 'Ethereum', symbol: 'ETH', placeholder: '0x...', example: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' },
@@ -38,8 +41,8 @@ export const PortfolioRisk: React.FC = () => {
   // Currency Display Mode State ('USD' | 'INR' | 'BOTH')
   const [currencyMode, setCurrencyMode] = useState<'USD' | 'INR' | 'BOTH'>('USD');
 
-  // Modals state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  // Drawer state for adding / managing holdings
+  const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'addWallet' | 'addAsset' | 'manageAssets'>('addWallet');
   const [selectedAsset, setSelectedAsset] = useState<PortfolioAssetItem | null>(null);
 
@@ -242,7 +245,7 @@ export const PortfolioRisk: React.FC = () => {
     try {
       await portfolioService.removeWallet(walletId);
       await fetchPortfolioData();
-    } catch (err) {
+    } catch {
       setError('Failed to remove wallet.');
     }
   };
@@ -251,7 +254,7 @@ export const PortfolioRisk: React.FC = () => {
     try {
       await portfolioService.removeManualAsset(assetId);
       await fetchPortfolioData();
-    } catch (err) {
+    } catch {
       setError('Failed to remove asset holding.');
     }
   };
@@ -263,656 +266,735 @@ export const PortfolioRisk: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto py-16 text-center text-ghost-textMuted text-sm animate-pulse">
-        Loading your portfolio and live market holdings...
+      <div className="space-y-6 animate-pulse max-w-6xl mx-auto py-4">
+        <div className="h-10 bg-ghost-card border border-ghost-border rounded-xl w-1/3" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto pb-16 animate-in fade-in duration-300">
-      
-      {/* Header & Portfolio Total */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <span className="text-xs font-bold text-ghost-textMuted uppercase tracking-wider block">
-              Your Portfolio Value
-            </span>
-            
+    <div className="space-y-6 animate-in fade-in duration-200 max-w-6xl mx-auto">
+      {/* Page Header */}
+      <PageHeader
+        title="Portfolio & Balances"
+        subtitle="Multi-chain wallet tracking and manual holdings with real-time risk assessment."
+        actions={
+          <div className="flex flex-wrap items-center gap-3">
             {/* Currency Mode Selector Pill */}
-            <div className="inline-flex bg-ghost-darkest border border-ghost-border p-0.5 rounded-xl text-xs">
+            <div className="inline-flex bg-ghost-bg border border-ghost-border p-1 rounded-xl text-xs">
               <button
                 onClick={() => setCurrencyMode('USD')}
-                className={`px-2.5 py-0.5 rounded-lg transition-colors font-semibold ${
-                  currencyMode === 'USD' ? 'bg-ghost-burgundy text-ghost-sand shadow' : 'text-ghost-textMuted hover:text-ghost-textPrimary'
+                className={`px-3 py-1 rounded-lg transition-colors font-semibold ${
+                  currencyMode === 'USD'
+                    ? 'bg-ghost-burgundy text-ghost-sand shadow-sm'
+                    : 'text-ghost-textMuted hover:text-ghost-textPrimary'
                 }`}
               >
                 USD ($)
               </button>
               <button
                 onClick={() => setCurrencyMode('INR')}
-                className={`px-2.5 py-0.5 rounded-lg transition-colors font-semibold ${
-                  currencyMode === 'INR' ? 'bg-ghost-burgundy text-ghost-sand shadow' : 'text-ghost-textMuted hover:text-ghost-textPrimary'
+                className={`px-3 py-1 rounded-lg transition-colors font-semibold ${
+                  currencyMode === 'INR'
+                    ? 'bg-ghost-burgundy text-ghost-sand shadow-sm'
+                    : 'text-ghost-textMuted hover:text-ghost-textPrimary'
                 }`}
               >
                 INR (₹)
               </button>
               <button
                 onClick={() => setCurrencyMode('BOTH')}
-                className={`px-2.5 py-0.5 rounded-lg transition-colors font-semibold ${
-                  currencyMode === 'BOTH' ? 'bg-ghost-burgundy text-ghost-sand shadow' : 'text-ghost-textMuted hover:text-ghost-textPrimary'
+                className={`px-3 py-1 rounded-lg transition-colors font-semibold ${
+                  currencyMode === 'BOTH'
+                    ? 'bg-ghost-burgundy text-ghost-sand shadow-sm'
+                    : 'text-ghost-textMuted hover:text-ghost-textPrimary'
                 }`}
               >
-                Both ($/₹)
+                Both
               </button>
             </div>
+
+            <button
+              onClick={handleRefreshAll}
+              disabled={isRefreshing}
+              className="px-3.5 py-1.5 rounded-xl bg-ghost-card hover:bg-ghost-cardHover border border-ghost-border text-xs font-semibold text-ghost-textPrimary transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-ghost-sand' : 'text-ghost-textMuted'}`} />
+              <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('addWallet');
+                setIsEditDrawerOpen(true);
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-ghost-burgundy hover:bg-ghost-burgundyLight text-ghost-sand border border-ghost-sand/30 text-xs font-semibold flex items-center gap-2 shadow-sm transition-all"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add / Manage Holdings</span>
+            </button>
           </div>
-
-          <div className="flex flex-col">
-            <div className="flex items-baseline gap-4">
-              <h1 className="text-4xl font-extrabold text-ghost-sand tracking-tight">
-                {currencyMode === 'INR' ? (
-                  `₹${totalPortfolioValueINR.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                ) : (
-                  `$${totalPortfolioValueUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                )}
-              </h1>
-              {totalPortfolioValueUSD > 0 && (
-                <span className="text-emerald-400 text-xs font-bold bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
-                  +2.40% today
-                </span>
-              )}
-            </div>
-
-            {/* Secondary Currency Display when BOTH mode is active */}
-            {currencyMode === 'BOTH' && totalPortfolioValueUSD > 0 && (
-              <span className="text-sm font-semibold text-ghost-sand mt-1">
-                ≈ ₹{totalPortfolioValueINR.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} INR
-              </span>
-            )}
-          </div>
-
-          <p className="text-xs text-ghost-textMuted mt-1.5 flex items-center gap-2">
-            <span>Last updated {Math.round((new Date().getTime() - lastRefreshedAt.getTime()) / 1000)}s ago</span>
-            <span>•</span>
-            <span className="text-ghost-sand font-semibold">1 USD = ₹{USD_TO_INR.toFixed(2)} INR</span>
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleRefreshAll}
-            disabled={isRefreshing}
-            className="px-4 py-2 bg-ghost-card border border-ghost-border rounded-xl text-ghost-textPrimary text-xs font-semibold hover:bg-ghost-border/40 transition-colors flex items-center gap-2 disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-ghost-sand' : ''}`} />
-            <span>{isRefreshing ? 'Refreshing...' : 'Refresh balances'}</span>
-          </button>
-
-          <button
-            onClick={() => setIsEditModalOpen(true)}
-            className="px-4 py-2 bg-ghost-burgundy text-ghost-sand text-xs font-semibold rounded-xl hover:bg-ghost-burgundyLight transition-colors flex items-center gap-2 shadow"
-          >
-            <Edit3 className="w-4 h-4" />
-            <span>Edit portfolio</span>
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {error && (
-        <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-400 text-xs flex items-center justify-between">
+        <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={handleRefreshAll} className="underline font-bold">Try again</button>
+          <button onClick={handleRefreshAll} className="underline font-semibold text-rose-200">
+            Retry
+          </button>
         </div>
       )}
 
       {/* Main Grid Content */}
       {enrichedAssets.length === 0 ? (
         /* Empty State */
-        <div className="bg-ghost-card border border-ghost-border rounded-2xl p-12 text-center my-8 shadow-sm space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-ghost-burgundy/40 border border-ghost-burgundyLight flex items-center justify-center mx-auto text-ghost-sand">
+        <Card className="text-center py-16 px-6 space-y-4 max-w-xl mx-auto">
+          <div className="w-16 h-16 rounded-2xl bg-ghost-burgundy/20 border border-ghost-sand/30 flex items-center justify-center mx-auto text-ghost-sand">
             <WalletIcon className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold text-ghost-textPrimary">Your portfolio is empty</h2>
-          <p className="text-xs text-ghost-textMuted max-w-md mx-auto leading-relaxed">
-            Connect a public wallet address or add your manual holdings to track your live investment portfolio.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+          <div>
+            <h2 className="text-lg font-bold text-ghost-textPrimary">No Assets Tracked Yet</h2>
+            <p className="text-xs text-ghost-textMuted max-w-md mx-auto mt-1 leading-relaxed">
+              Connect a read-only public wallet address or enter your manual holdings to track live multi-asset valuations and risk.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <button
-              onClick={() => { setActiveTab('addWallet'); setIsEditModalOpen(true); }}
-              className="px-5 py-2.5 bg-ghost-burgundy text-ghost-sand font-semibold text-xs rounded-xl hover:bg-ghost-burgundyLight transition-colors flex items-center gap-2 shadow"
+              onClick={() => {
+                setActiveTab('addWallet');
+                setIsEditDrawerOpen(true);
+              }}
+              className="px-4 py-2 bg-ghost-burgundy hover:bg-ghost-burgundyLight text-ghost-sand font-semibold text-xs rounded-xl transition-colors flex items-center gap-2 shadow-sm"
             >
               <WalletIcon className="w-4 h-4" />
-              <span>Connect wallet</span>
+              <span>Connect Wallet</span>
             </button>
             <button
-              onClick={() => { setActiveTab('addAsset'); setIsEditModalOpen(true); }}
-              className="px-5 py-2.5 bg-ghost-card border border-ghost-border text-ghost-textPrimary font-semibold text-xs rounded-xl hover:bg-ghost-border/40 transition-colors flex items-center gap-2"
+              onClick={() => {
+                setActiveTab('addAsset');
+                setIsEditDrawerOpen(true);
+              }}
+              className="px-4 py-2 bg-ghost-card hover:bg-ghost-cardHover border border-ghost-border text-ghost-textPrimary font-semibold text-xs rounded-xl transition-colors flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
-              <span>Add holding</span>
+              <span>Add Manual Holding</span>
             </button>
           </div>
-        </div>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Left 2 Cols: Assets & Allocation */}
-          <div className="lg:col-span-2 space-y-8">
-            
-            {/* Allocation Bar */}
-            <div className="bg-ghost-card border border-ghost-border rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-ghost-border/50">
-                <div className="flex items-center gap-2">
-                  <PieChart className="w-5 h-5 text-ghost-sand" />
-                  <h2 className="text-base font-bold text-ghost-textPrimary">Portfolio Allocation</h2>
+        <div className="space-y-6">
+          {/* Top Hero Stats Banner */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <Card className="space-y-2">
+              <span className="text-xs font-semibold text-ghost-textMuted uppercase tracking-wider block">
+                Total Portfolio Value
+              </span>
+              <div className="flex items-baseline gap-3">
+                <span className="text-3xl font-extrabold text-ghost-sand tracking-tight">
+                  {currencyMode === 'INR'
+                    ? `₹${totalPortfolioValueINR.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : `$${totalPortfolioValueUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                </span>
+                {totalPortfolioValueUSD > 0 && (
+                  <span className="text-emerald-400 text-xs font-bold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" />
+                    +2.40%
+                  </span>
+                )}
+              </div>
+              {currencyMode === 'BOTH' && totalPortfolioValueUSD > 0 && (
+                <div className="text-xs text-ghost-sand/90 font-medium">
+                  ≈ ₹{totalPortfolioValueINR.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} INR
                 </div>
-                <span className="text-xs text-ghost-textMuted font-semibold">{enrichedAssets.length} Assets</span>
+              )}
+              <div className="text-[11px] text-ghost-textMuted pt-1 flex items-center gap-2">
+                <span>Updated {Math.round((new Date().getTime() - lastRefreshedAt.getTime()) / 1000)}s ago</span>
+                <span>•</span>
+                <span>1 USD = ₹{USD_TO_INR.toFixed(2)}</span>
               </div>
+            </Card>
 
-              {/* Progress Bar */}
-              <div className="h-3 flex rounded-full overflow-hidden mb-6 bg-ghost-darkest p-0.5 border border-ghost-border/30">
-                {enrichedAssets.map((a, i) => (
-                  <div
-                    key={a.symbol}
-                    style={{ width: `${Math.max(a.allocation, 2)}%` }}
-                    className={`h-full ${
-                      i === 0 ? 'bg-ghost-sand' : i === 1 ? 'bg-ghost-burgundyLight' : i === 2 ? 'bg-emerald-400' : 'bg-amber-400'
-                    }`}
-                  />
-                ))}
+            <Card className="space-y-2">
+              <span className="text-xs font-semibold text-ghost-textMuted uppercase tracking-wider block">
+                Portfolio Holdings
+              </span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold text-ghost-textPrimary tracking-tight">
+                  {enrichedAssets.length}
+                </span>
+                <span className="text-xs text-ghost-textMuted">unique assets</span>
               </div>
+              <div className="text-xs text-ghost-textMuted pt-1 flex items-center gap-3">
+                <span>Wallets: <strong className="text-ghost-textPrimary">{portfolio?.wallets?.length || 0}</strong></span>
+                <span>•</span>
+                <span>Top: <strong className="text-ghost-sand font-bold">{enrichedAssets[0]?.symbol || '—'}</strong> ({enrichedAssets[0]?.allocation.toFixed(1) || 0}%)</span>
+              </div>
+            </Card>
 
-              {/* Assets Breakdown Table */}
-              <div className="space-y-3">
-                {enrichedAssets.map((a, i) => (
-                  <div
-                    key={a.symbol}
-                    onClick={() => {
-                      const orig = portfolio?.assets.find(item => item.symbol.toUpperCase() === a.symbol);
-                      if (orig) setSelectedAsset(orig);
-                    }}
-                    className="flex items-center justify-between p-3.5 rounded-xl hover:bg-ghost-darkest/60 border border-transparent hover:border-ghost-border/40 transition-all cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className={`w-3 h-3 rounded-full ${
-                        i === 0 ? 'bg-ghost-sand' : i === 1 ? 'bg-ghost-burgundyLight' : i === 2 ? 'bg-emerald-400' : 'bg-amber-400'
-                      }`} />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-ghost-textPrimary group-hover:text-ghost-sand transition-colors">{a.symbol}</span>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-md uppercase font-semibold tracking-wider ${
-                            a.sourcesList.includes('Wallet') ? 'bg-ghost-burgundy/40 text-ghost-sand border border-ghost-burgundyLight' : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
-                          }`}>
-                            {a.sourcesList}
-                          </span>
-                        </div>
-                        <span className="text-xs text-ghost-textMuted font-medium">
-                          {a.quantity.toLocaleString(undefined, { maximumFractionDigits: 6 })} {a.symbol}
-                        </span>
-                      </div>
-                    </div>
+            <Card className="space-y-2">
+              <span className="text-xs font-semibold text-ghost-textMuted uppercase tracking-wider block">
+                Risk Classification
+              </span>
+              <div className="flex items-center gap-2.5">
+                <ShieldAlert className={`w-6 h-6 ${
+                  (riskResult?.overall_risk_score ?? 0) > 70
+                    ? 'text-rose-400'
+                    : (riskResult?.overall_risk_score ?? 0) > 40
+                    ? 'text-amber-400'
+                    : 'text-emerald-400'
+                }`} />
+                <span className="text-2xl font-extrabold text-ghost-textPrimary tracking-tight">
+                  {riskResult ? (
+                    riskResult.overall_risk_score > 70 ? 'High Risk' : riskResult.overall_risk_score > 40 ? 'Moderate' : 'Low Risk'
+                  ) : (
+                    'Unrated'
+                  )}
+                </span>
+              </div>
+              <div className="text-xs text-ghost-textMuted pt-1">
+                Daily VaR (95%): <strong className="text-ghost-textPrimary">{riskResult ? `${(riskResult.portfolio_var_95_daily * 100).toFixed(2)}%` : '—'}</strong>
+              </div>
+            </Card>
+          </div>
 
-                    <div className="text-right">
-                      <div className="font-bold text-ghost-textPrimary text-sm">
-                        {formatVal(a.usdValue)}
-                      </div>
-                      <div className="text-xs text-ghost-textMuted font-medium">
-                        {a.allocation.toFixed(1)}%
-                      </div>
-                    </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left 2 Cols: Allocation & Breakdown */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Allocation Card */}
+              <Card className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-ghost-border/50">
+                  <div className="flex items-center gap-2">
+                    <PieChart className="w-4 h-4 text-ghost-sand" />
+                    <h2 className="text-sm font-bold text-ghost-textPrimary">Asset Allocation</h2>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Connected Wallets List */}
-            <div className="bg-ghost-card border border-ghost-border rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-ghost-border/50">
-                <div className="flex items-center gap-2">
-                  <WalletIcon className="w-5 h-5 text-ghost-sand" />
-                  <h2 className="text-base font-bold text-ghost-textPrimary">My Wallets</h2>
+                  <span className="text-xs text-ghost-textMuted font-medium">{enrichedAssets.length} Holdings</span>
                 </div>
-                <button
-                  onClick={() => { setActiveTab('addWallet'); setIsEditModalOpen(true); }}
-                  className="text-xs text-ghost-sand hover:underline font-bold flex items-center gap-1"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Connect wallet</span>
-                </button>
-              </div>
 
-              {portfolio?.wallets && portfolio.wallets.length > 0 ? (
-                <div className="space-y-3">
-                  {portfolio.wallets.map((w) => (
-                    <div key={w.id} className="flex items-center justify-between p-3.5 bg-ghost-darkest/50 border border-ghost-border/40 rounded-xl">
+                {/* Visual Allocation Segment Bar */}
+                <div className="h-3 flex rounded-full overflow-hidden bg-ghost-bg p-0.5 border border-ghost-border/40">
+                  {enrichedAssets.map((a, i) => (
+                    <div
+                      key={a.symbol}
+                      style={{ width: `${Math.max(a.allocation, 2)}%` }}
+                      title={`${a.symbol}: ${a.allocation.toFixed(1)}%`}
+                      className={`h-full transition-all ${
+                        i === 0 ? 'bg-ghost-sand' : i === 1 ? 'bg-ghost-burgundy' : i === 2 ? 'bg-emerald-500' : 'bg-amber-500'
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                {/* Assets Table */}
+                <div className="divide-y divide-ghost-border/30">
+                  {enrichedAssets.map((a, i) => (
+                    <div
+                      key={a.symbol}
+                      onClick={() => {
+                        const orig = portfolio?.assets.find(item => item.symbol.toUpperCase() === a.symbol);
+                        if (orig) setSelectedAsset(orig);
+                      }}
+                      className="flex items-center justify-between py-3 px-2 rounded-xl hover:bg-ghost-cardHover transition-colors cursor-pointer group"
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-ghost-burgundy/40 border border-ghost-burgundyLight flex items-center justify-center text-xs font-bold text-ghost-sand">
-                          {w.network.slice(0, 2).toUpperCase()}
-                        </div>
+                        <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                          i === 0 ? 'bg-ghost-sand' : i === 1 ? 'bg-ghost-burgundy' : i === 2 ? 'bg-emerald-500' : 'bg-amber-500'
+                        }`} />
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-ghost-textPrimary text-sm">{w.label || w.network}</span>
-                            <span className="text-xs font-mono text-ghost-textMuted bg-ghost-border/40 px-2 py-0.5 rounded-md">
-                              {shortenAddress(w.address)}
+                            <span className="font-bold text-ghost-textPrimary text-sm group-hover:text-ghost-sand transition-colors">
+                              {a.symbol}
+                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-md uppercase font-semibold tracking-wider bg-ghost-bg border border-ghost-border text-ghost-textMuted">
+                              {a.sourcesList}
                             </span>
                           </div>
                           <span className="text-xs text-ghost-textMuted">
-                            {w.asset_count} assets detected on {w.network}
+                            {a.quantity.toLocaleString(undefined, { maximumFractionDigits: 6 })} {a.symbol}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => portfolioService.refreshWallet(w.id).then(fetchPortfolioData)}
-                          className="p-2 hover:bg-ghost-border/50 text-ghost-textMuted hover:text-ghost-textPrimary rounded-lg transition-colors"
-                          title="Refresh wallet balances"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleRemoveWallet(w.id)}
-                          className="p-2 hover:bg-rose-500/10 text-ghost-textMuted hover:text-rose-400 rounded-lg transition-colors"
-                          title="Remove wallet"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                      <div className="text-right">
+                        <div className="font-bold text-ghost-textPrimary text-sm">
+                          {formatVal(a.usdValue)}
+                        </div>
+                        <div className="text-xs text-ghost-sand font-medium">
+                          {a.allocation.toFixed(1)}%
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="py-6 text-center text-xs text-ghost-textMuted border border-dashed border-ghost-border/60 rounded-xl">
-                  No read-only wallets connected yet.
+              </Card>
+
+              {/* Connected Wallets Card */}
+              <Card className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-ghost-border/50">
+                  <div className="flex items-center gap-2">
+                    <WalletIcon className="w-4 h-4 text-ghost-sand" />
+                    <h2 className="text-sm font-bold text-ghost-textPrimary">Connected Read-Only Wallets</h2>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setActiveTab('addWallet');
+                      setIsEditDrawerOpen(true);
+                    }}
+                    className="text-xs text-ghost-sand hover:underline font-semibold flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Connect Wallet</span>
+                  </button>
                 </div>
-              )}
+
+                {portfolio?.wallets && portfolio.wallets.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {portfolio.wallets.map((w) => (
+                      <div
+                        key={w.id}
+                        className="flex items-center justify-between p-3.5 bg-ghost-bg/70 border border-ghost-border/60 rounded-xl"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-ghost-burgundy/30 border border-ghost-burgundyLight flex items-center justify-center text-xs font-bold text-ghost-sand">
+                            {w.network.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-ghost-textPrimary text-xs">{w.label || w.network}</span>
+                              <span className="text-[11px] font-mono text-ghost-textMuted bg-ghost-card px-2 py-0.5 rounded border border-ghost-border/50">
+                                {shortenAddress(w.address)}
+                              </span>
+                            </div>
+                            <span className="text-[11px] text-ghost-textMuted">
+                              {w.asset_count} assets detected on {w.network}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => portfolioService.refreshWallet(w.id).then(fetchPortfolioData)}
+                            className="p-1.5 hover:bg-ghost-card text-ghost-textMuted hover:text-ghost-textPrimary rounded-lg transition-colors"
+                            title="Refresh balances"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleRemoveWallet(w.id)}
+                            className="p-1.5 hover:bg-rose-500/15 text-ghost-textMuted hover:text-rose-400 rounded-lg transition-colors"
+                            title="Remove wallet"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-6 text-center text-xs text-ghost-textMuted border border-dashed border-ghost-border/50 rounded-xl">
+                    No public wallets connected yet.
+                  </div>
+                )}
+              </Card>
             </div>
 
+            {/* Right Col: Risk & Advisory */}
+            <div className="space-y-6">
+              <Card className="space-y-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-ghost-border/50">
+                  <ShieldAlert className="w-4 h-4 text-emerald-400" />
+                  <h2 className="text-sm font-bold text-ghost-textPrimary">Portfolio Risk Metrics</h2>
+                </div>
+
+                {riskResult ? (
+                  <div className="space-y-3.5 text-xs">
+                    <div className="flex justify-between items-center pb-2.5 border-b border-ghost-border/30">
+                      <span className="text-ghost-textMuted">Overall Risk Assessment</span>
+                      <span className={`font-semibold ${
+                        riskResult.overall_risk_score > 70
+                          ? 'text-rose-400'
+                          : riskResult.overall_risk_score > 40
+                          ? 'text-amber-400'
+                          : 'text-emerald-400'
+                      }`}>
+                        {riskResult.overall_risk_score > 70 ? 'High Risk' : riskResult.overall_risk_score > 40 ? 'Moderate' : 'Low Risk'}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center pb-2.5 border-b border-ghost-border/30">
+                      <span className="text-ghost-textMuted">Largest Position</span>
+                      <span className="font-semibold text-ghost-textPrimary">
+                        {enrichedAssets[0]?.symbol || 'None'}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center pb-2.5 border-b border-ghost-border/30">
+                      <span className="text-ghost-textMuted">Asset Concentration</span>
+                      <span className="font-semibold text-ghost-sand">
+                        {enrichedAssets[0] ? `${enrichedAssets[0].allocation.toFixed(1)}%` : '0%'}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center pb-2.5 border-b border-ghost-border/30">
+                      <span className="text-ghost-textMuted">Daily VaR (95%)</span>
+                      <span className="font-bold text-ghost-textPrimary">
+                        {(riskResult.portfolio_var_95_daily * 100).toFixed(2)}%
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => navigate('/research')}
+                      className="w-full mt-4 py-2.5 rounded-xl bg-ghost-burgundy hover:bg-ghost-burgundyLight text-ghost-sand border border-ghost-sand/20 transition-all text-xs font-semibold flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      <span>Deep Risk Analysis</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="py-6 text-center text-xs text-ghost-textMuted flex flex-col items-center justify-center">
+                    <Info className="w-5 h-5 mb-2 opacity-40 text-ghost-sand" />
+                    Add asset holdings to compute risk analysis.
+                  </div>
+                )}
+              </Card>
+
+              {/* Non-custodial Security Card */}
+              <Card className="space-y-2 p-5 bg-ghost-card border border-ghost-border/70">
+                <div className="flex items-center gap-2 text-ghost-sand font-bold text-xs">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Non-Custodial Architecture</span>
+                </div>
+                <p className="text-xs text-ghost-textMuted leading-relaxed">
+                  GHOST queries public on-chain ledgers in read-only mode. We never request private keys, signatures, or recovery seeds.
+                </p>
+              </Card>
+            </div>
           </div>
-
-          {/* Right Col: Risk & Security Notice */}
-          <div className="space-y-8">
-            
-            {/* Risk Assessment */}
-            <div className="bg-ghost-card border border-ghost-border rounded-2xl p-6 shadow-sm flex flex-col">
-              <div className="flex items-center gap-2 mb-4 pb-3 border-b border-ghost-border/50">
-                <ShieldAlert className="w-5 h-5 text-emerald-400" />
-                <h2 className="text-base font-bold text-ghost-textPrimary">Portfolio Risk</h2>
-              </div>
-
-              {riskResult ? (
-                <div className="space-y-4 flex-1 text-xs">
-                  <div className="flex justify-between items-center pb-3 border-b border-ghost-border/40">
-                    <span className="text-ghost-textMuted">Overall risk</span>
-                    <span className={`font-semibold ${
-                      riskResult.overall_risk_score > 70 ? 'text-rose-400' : riskResult.overall_risk_score > 40 ? 'text-amber-400' : 'text-emerald-400'
-                    }`}>
-                      {riskResult.overall_risk_score > 70 ? 'High Risk' : riskResult.overall_risk_score > 40 ? 'Moderate' : 'Low Risk'}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center pb-3 border-b border-ghost-border/40">
-                    <span className="text-ghost-textMuted">Largest holding</span>
-                    <span className="font-semibold text-ghost-textPrimary">
-                      {enrichedAssets[0]?.symbol || 'None'}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center pb-3 border-b border-ghost-border/40">
-                    <span className="text-ghost-textMuted">Concentration</span>
-                    <span className="font-semibold text-ghost-textPrimary">
-                      {enrichedAssets[0] ? `${enrichedAssets[0].allocation.toFixed(0)}%` : '0%'}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center pb-3 border-b border-ghost-border/40">
-                    <span className="text-ghost-textMuted">Daily VaR (95%)</span>
-                    <span className="font-bold text-ghost-textPrimary">
-                      {(riskResult.portfolio_var_95_daily * 100).toFixed(2)}%
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="py-8 text-center text-xs text-ghost-textMuted flex flex-col items-center justify-center">
-                  <Info className="w-6 h-6 mb-2 opacity-40 text-ghost-sand" />
-                  Add holdings to calculate real-time portfolio risk.
-                </div>
-              )}
-
-              <button
-                onClick={() => navigate('/research')}
-                className="w-full mt-6 py-2.5 rounded-xl bg-ghost-burgundy text-ghost-sand hover:bg-ghost-burgundyLight transition-colors text-xs font-semibold flex items-center justify-center gap-2 shadow"
-              >
-                <span>View risk analysis</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Quick Helper Card */}
-            <div className="bg-ghost-card border border-ghost-border rounded-2xl p-5 shadow-sm space-y-2">
-              <div className="flex items-center gap-2 text-ghost-sand font-bold text-xs">
-                <Sparkles className="w-4 h-4" />
-                <span>Security Notice</span>
-              </div>
-              <p className="text-xs text-ghost-textMuted leading-relaxed">
-                GHOST uses read-only public address tracking. We will <strong>never</strong> ask for private keys, seed phrases, or password credentials.
-              </p>
-            </div>
-
-          </div>
-
         </div>
       )}
 
-      {/* Edit Portfolio Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-ghost-card border border-ghost-border rounded-2xl max-w-lg w-full p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-            
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-ghost-border">
-              <h3 className="text-base font-bold text-ghost-textPrimary">Edit Portfolio</h3>
-              <button onClick={() => setIsEditModalOpen(false)} className="p-1 hover:bg-ghost-border/50 text-ghost-textMuted rounded-lg">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      {/* Edit Portfolio Slide-Over Drawer */}
+      <Drawer
+        isOpen={isEditDrawerOpen}
+        onClose={() => setIsEditDrawerOpen(false)}
+        title="Manage Portfolio Holdings"
+        subtitle="Connect on-chain wallets or record manual spot positions."
+        width="max-w-lg"
+      >
+        <div className="space-y-6">
+          {/* Sub-tabs */}
+          <div className="flex border-b border-ghost-border text-xs font-semibold">
+            <button
+              onClick={() => setActiveTab('addWallet')}
+              className={`py-2 px-3 border-b-2 transition-colors ${
+                activeTab === 'addWallet'
+                  ? 'border-ghost-sand text-ghost-sand font-bold'
+                  : 'border-transparent text-ghost-textMuted hover:text-ghost-textPrimary'
+              }`}
+            >
+              Connect Wallet
+            </button>
+            <button
+              onClick={() => setActiveTab('addAsset')}
+              className={`py-2 px-3 border-b-2 transition-colors ${
+                activeTab === 'addAsset'
+                  ? 'border-ghost-sand text-ghost-sand font-bold'
+                  : 'border-transparent text-ghost-textMuted hover:text-ghost-textPrimary'
+              }`}
+            >
+              Add Holding
+            </button>
+            <button
+              onClick={() => setActiveTab('manageAssets')}
+              className={`py-2 px-3 border-b-2 transition-colors ${
+                activeTab === 'manageAssets'
+                  ? 'border-ghost-sand text-ghost-sand font-bold'
+                  : 'border-transparent text-ghost-textMuted hover:text-ghost-textPrimary'
+              }`}
+            >
+              Manage ({portfolio?.assets?.length || 0})
+            </button>
+          </div>
 
-            {/* Modal Navigation Tabs */}
-            <div className="flex border-b border-ghost-border/60 my-4 text-xs font-semibold">
-              <button
-                onClick={() => setActiveTab('addWallet')}
-                className={`py-2 px-4 border-b-2 transition-colors ${
-                  activeTab === 'addWallet' ? 'border-ghost-sand text-ghost-sand font-bold' : 'border-transparent text-ghost-textMuted hover:text-ghost-textPrimary'
-                }`}
-              >
-                Add Wallet
-              </button>
-              <button
-                onClick={() => setActiveTab('addAsset')}
-                className={`py-2 px-4 border-b-2 transition-colors ${
-                  activeTab === 'addAsset' ? 'border-ghost-sand text-ghost-sand font-bold' : 'border-transparent text-ghost-textMuted hover:text-ghost-textPrimary'
-                }`}
-              >
-                Add Manual Holding
-              </button>
-              <button
-                onClick={() => setActiveTab('manageAssets')}
-                className={`py-2 px-4 border-b-2 transition-colors ${
-                  activeTab === 'manageAssets' ? 'border-ghost-sand text-ghost-sand font-bold' : 'border-transparent text-ghost-textMuted hover:text-ghost-textPrimary'
-                }`}
-              >
-                Manage Assets
-              </button>
-            </div>
+          {/* TAB 1: Add Public Wallet */}
+          {activeTab === 'addWallet' && (
+            <form onSubmit={handleAddWalletSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-ghost-textMuted mb-1.5 font-semibold">Blockchain Network</label>
+                <select
+                  value={walletNetwork}
+                  onChange={(e) => setWalletNetwork(e.target.value)}
+                  className="w-full bg-ghost-bg border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary focus:outline-none focus:border-ghost-sand"
+                >
+                  {SUPPORTED_NETWORKS.map((net) => (
+                    <option key={net.name} value={net.name}>
+                      {net.name} ({net.symbol})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            {/* TAB 1: Add Public Wallet */}
-            {activeTab === 'addWallet' && (
-              <form onSubmit={handleAddWalletSubmit} className="space-y-4 text-xs">
-                <div>
-                  <label className="block text-ghost-textMuted mb-1 font-semibold">Select Network</label>
-                  <select
-                    value={walletNetwork}
-                    onChange={(e) => setWalletNetwork(e.target.value)}
-                    className="w-full bg-ghost-darkest border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary focus:outline-none focus:border-ghost-burgundySoft"
-                  >
-                    {SUPPORTED_NETWORKS.map((net) => (
-                      <option key={net.name} value={net.name}>{net.name} ({net.symbol})</option>
-                    ))}
-                  </select>
+              <div>
+                <label className="block text-ghost-textMuted mb-1.5 font-semibold">Public Address</label>
+                <input
+                  type="text"
+                  required
+                  value={walletAddress}
+                  onChange={(e) => setWalletAddress(e.target.value)}
+                  placeholder={SUPPORTED_NETWORKS.find(n => n.name === walletNetwork)?.placeholder || '0x...'}
+                  className="w-full bg-ghost-bg border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary font-mono placeholder:text-ghost-textMuted/50 focus:outline-none focus:border-ghost-sand"
+                />
+                <span className="text-[11px] text-ghost-textMuted mt-1 block">
+                  Example: {SUPPORTED_NETWORKS.find(n => n.name === walletNetwork)?.example}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-ghost-textMuted mb-1.5 font-semibold">Label (Optional)</label>
+                <input
+                  type="text"
+                  value={walletLabel}
+                  onChange={(e) => setWalletLabel(e.target.value)}
+                  placeholder="e.g. Treasury Multisig"
+                  className="w-full bg-ghost-bg border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary focus:outline-none focus:border-ghost-sand"
+                />
+              </div>
+
+              {walletCheckError && (
+                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs">
+                  {walletCheckError}
                 </div>
+              )}
 
+              {walletSuccessMsg && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300 text-xs flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>{walletSuccessMsg}</span>
+                </div>
+              )}
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isCheckingWallet || !walletAddress.trim()}
+                  className="w-full py-2.5 bg-ghost-burgundy text-ghost-sand font-bold rounded-xl hover:bg-ghost-burgundyLight border border-ghost-sand/30 transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                >
+                  {isCheckingWallet ? (
+                    <span>Verifying On-Chain Balances...</span>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Connect Public Address</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* TAB 2: Add Manual Holding */}
+          {activeTab === 'addAsset' && (
+            <form onSubmit={handleAddManualAssetSubmit} className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-ghost-textMuted mb-1 font-semibold">Public Wallet Address</label>
+                  <label className="block text-ghost-textMuted mb-1.5 font-semibold">Asset Symbol</label>
                   <input
                     type="text"
                     required
-                    value={walletAddress}
-                    onChange={(e) => setWalletAddress(e.target.value)}
-                    placeholder={SUPPORTED_NETWORKS.find(n => n.name === walletNetwork)?.placeholder || '0x...'}
-                    className="w-full bg-ghost-darkest border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary font-mono placeholder:text-ghost-textMuted/50 focus:outline-none focus:border-ghost-burgundySoft"
+                    value={manualSymbol}
+                    onChange={(e) => setManualSymbol(e.target.value.toUpperCase())}
+                    placeholder="e.g. BTC"
+                    className="w-full bg-ghost-bg border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary uppercase focus:outline-none focus:border-ghost-sand font-bold"
                   />
-                  <span className="text-[11px] text-ghost-textMuted mt-1 block">
-                    Example: {SUPPORTED_NETWORKS.find(n => n.name === walletNetwork)?.example}
-                  </span>
                 </div>
 
                 <div>
-                  <label className="block text-ghost-textMuted mb-1 font-semibold">Wallet Label (Optional)</label>
+                  <label className="block text-ghost-textMuted mb-1.5 font-semibold">Network / Location</label>
                   <input
                     type="text"
-                    value={walletLabel}
-                    onChange={(e) => setWalletLabel(e.target.value)}
-                    placeholder="e.g. Main Cold Storage"
-                    className="w-full bg-ghost-darkest border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary focus:outline-none focus:border-ghost-burgundySoft"
+                    value={manualNetwork}
+                    onChange={(e) => setManualNetwork(e.target.value)}
+                    placeholder="e.g. Bitcoin"
+                    className="w-full bg-ghost-bg border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary focus:outline-none focus:border-ghost-sand"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-ghost-textMuted mb-1.5 font-semibold">Quantity</label>
+                  <input
+                    type="number"
+                    step="any"
+                    required
+                    value={manualQuantity}
+                    onChange={(e) => setManualQuantity(e.target.value)}
+                    placeholder="0.00"
+                    className="w-full bg-ghost-bg border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary focus:outline-none focus:border-ghost-sand"
                   />
                 </div>
 
-                {walletCheckError && (
-                  <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs">
-                    {walletCheckError}
-                  </div>
-                )}
-
-                {walletSuccessMsg && (
-                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs flex items-center gap-2">
-                    <Check className="w-4 h-4" />
-                    <span>{walletSuccessMsg}</span>
-                  </div>
-                )}
-
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={isCheckingWallet || !walletAddress.trim()}
-                    className="w-full py-2.5 bg-ghost-burgundy text-ghost-sand font-bold rounded-xl hover:bg-ghost-burgundyLight transition-colors flex items-center justify-center gap-2 shadow disabled:opacity-50"
-                  >
-                    {isCheckingWallet ? (
-                      <span>Fetching Balances...</span>
-                    ) : (
-                      <>
-                        <Check className="w-4 h-4" />
-                        <span>Add to portfolio</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* TAB 2: Add Manual Holding */}
-            {activeTab === 'addAsset' && (
-              <form onSubmit={handleAddManualAssetSubmit} className="space-y-4 text-xs">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-ghost-textMuted mb-1 font-semibold">Asset Symbol</label>
-                    <input
-                      type="text"
-                      required
-                      value={manualSymbol}
-                      onChange={(e) => setManualSymbol(e.target.value.toUpperCase())}
-                      placeholder="e.g. BTC, ETH, SOL"
-                      className="w-full bg-ghost-darkest border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary uppercase focus:outline-none focus:border-ghost-burgundySoft font-bold"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-ghost-textMuted mb-1 font-semibold">Network Label</label>
-                    <input
-                      type="text"
-                      value={manualNetwork}
-                      onChange={(e) => setManualNetwork(e.target.value)}
-                      placeholder="e.g. Bitcoin, Solana"
-                      className="w-full bg-ghost-darkest border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary focus:outline-none focus:border-ghost-burgundySoft"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-ghost-textMuted mb-1 font-semibold">Quantity</label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      value={manualQuantity}
-                      onChange={(e) => setManualQuantity(e.target.value)}
-                      placeholder="0.00"
-                      className="w-full bg-ghost-darkest border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary focus:outline-none focus:border-ghost-burgundySoft"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-ghost-textMuted mb-1 font-semibold">Avg Entry Price (USD)</label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={manualEntryPrice}
-                      onChange={(e) => setManualEntryPrice(e.target.value)}
-                      placeholder="Optional"
-                      className="w-full bg-ghost-darkest border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary focus:outline-none focus:border-ghost-burgundySoft"
-                    />
-                  </div>
-                </div>
-
-                {assetFormError && (
-                  <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs">
-                    {assetFormError}
-                  </div>
-                )}
-
-                {assetSuccessMsg && (
-                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs flex items-center gap-2">
-                    <Check className="w-4 h-4" />
-                    <span>{assetSuccessMsg}</span>
-                  </div>
-                )}
-
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    className="w-full py-2.5 bg-ghost-burgundy text-ghost-sand font-bold rounded-xl hover:bg-ghost-burgundyLight transition-colors flex items-center justify-center gap-2 shadow"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Add manual holding</span>
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* TAB 3: Manage Assets */}
-            {activeTab === 'manageAssets' && (
-              <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                {portfolio?.assets && portfolio.assets.length > 0 ? (
-                  portfolio.assets.map(a => (
-                    <div key={a.id} className="flex items-center justify-between p-3 bg-ghost-darkest/50 border border-ghost-border/40 rounded-xl text-xs">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-ghost-textPrimary">{a.symbol}</span>
-                          <span className="text-[10px] text-ghost-textMuted bg-ghost-border/40 px-1.5 py-0.5 rounded-md">
-                            {a.source}
-                          </span>
-                        </div>
-                        <span className="text-ghost-textMuted">{a.quantity} {a.symbol}</span>
-                      </div>
-
-                      <button
-                        onClick={() => handleRemoveAsset(a.id)}
-                        className="p-1.5 hover:bg-rose-500/10 text-ghost-textMuted hover:text-rose-400 rounded-lg transition-colors"
-                        title="Remove holding"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <div className="py-6 text-center text-xs text-ghost-textMuted">No assets to manage.</div>
-                )}
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
-
-      {/* Asset Detail View Modal */}
-      {selectedAsset && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-ghost-card border border-ghost-border rounded-2xl max-w-md w-full p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-4 border-b border-ghost-border mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-ghost-burgundy/40 border border-ghost-burgundyLight flex items-center justify-center font-bold text-ghost-sand">
-                  {selectedAsset.symbol.slice(0, 3)}
-                </div>
                 <div>
-                  <h3 className="text-base font-bold text-ghost-textPrimary">{selectedAsset.symbol} Details</h3>
-                  <span className="text-xs text-ghost-textMuted">Source: {selectedAsset.source}</span>
+                  <label className="block text-ghost-textMuted mb-1.5 font-semibold">Avg Entry Price ($)</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={manualEntryPrice}
+                    onChange={(e) => setManualEntryPrice(e.target.value)}
+                    placeholder="Optional"
+                    className="w-full bg-ghost-bg border border-ghost-border rounded-xl p-2.5 text-ghost-textPrimary focus:outline-none focus:border-ghost-sand"
+                  />
                 </div>
               </div>
-              <button onClick={() => setSelectedAsset(null)} className="p-1 hover:bg-ghost-border/50 text-ghost-textMuted rounded-lg">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="flex justify-between items-center py-2 border-b border-ghost-border/40">
-                <span className="text-ghost-textMuted">Quantity</span>
-                <span className="font-bold text-ghost-textPrimary">{selectedAsset.quantity} {selectedAsset.symbol}</span>
-              </div>
-
-              <div className="flex justify-between items-center py-2 border-b border-ghost-border/40">
-                <span className="text-ghost-textMuted">Current Market Price</span>
-                <span className="font-bold text-ghost-textPrimary">
-                  {priceMap[selectedAsset.symbol] ? formatVal(priceMap[selectedAsset.symbol] || 0) : 'Price unavailable'}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center py-2 border-b border-ghost-border/40">
-                <span className="text-ghost-textMuted">Estimated Total Value</span>
-                <span className="font-bold text-ghost-sand text-sm">
-                  {priceMap[selectedAsset.symbol] ? formatVal(selectedAsset.quantity * (priceMap[selectedAsset.symbol] || 0)) : 'Unavailable'}
-                </span>
-              </div>
-
-              {selectedAsset.avg_entry_price > 0 && (
-                <>
-                  <div className="flex justify-between items-center py-2 border-b border-ghost-border/40">
-                    <span className="text-ghost-textMuted">Average Entry Price</span>
-                    <span className="text-ghost-textPrimary">{formatVal(selectedAsset.avg_entry_price)}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center py-2 border-b border-ghost-border/40">
-                    <span className="text-ghost-textMuted">Unrealized P/L</span>
-                    <span className={`font-bold ${
-                      (priceMap[selectedAsset.symbol] || 0) >= selectedAsset.avg_entry_price ? 'text-emerald-400' : 'text-rose-400'
-                    }`}>
-                      {priceMap[selectedAsset.symbol] ? (
-                        formatVal((selectedAsset.quantity * (priceMap[selectedAsset.symbol] || 0)) - (selectedAsset.quantity * selectedAsset.avg_entry_price))
-                      ) : 'N/A'}
-                    </span>
-                  </div>
-                </>
+              {assetFormError && (
+                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs">
+                  {assetFormError}
+                </div>
               )}
 
-              <div className="flex justify-between items-center py-2 border-b border-ghost-border/40">
-                <span className="text-ghost-textMuted">Network / Provider</span>
-                <span className="text-ghost-textPrimary">{selectedAsset.network || 'Mainnet'}</span>
+              {assetSuccessMsg && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300 text-xs flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>{assetSuccessMsg}</span>
+                </div>
+              )}
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full py-2.5 bg-ghost-burgundy text-ghost-sand font-bold rounded-xl hover:bg-ghost-burgundyLight border border-ghost-sand/30 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Holding</span>
+                </button>
               </div>
+            </form>
+          )}
+
+          {/* TAB 3: Manage Assets */}
+          {activeTab === 'manageAssets' && (
+            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+              {portfolio?.assets && portfolio.assets.length > 0 ? (
+                portfolio.assets.map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex items-center justify-between p-3.5 bg-ghost-bg border border-ghost-border/50 rounded-xl text-xs"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-ghost-textPrimary">{a.symbol}</span>
+                        <span className="text-[10px] text-ghost-textMuted bg-ghost-card border border-ghost-border px-1.5 py-0.5 rounded">
+                          {a.source}
+                        </span>
+                      </div>
+                      <span className="text-ghost-textMuted">
+                        {a.quantity} {a.symbol}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => handleRemoveAsset(a.id)}
+                      className="p-2 hover:bg-rose-500/15 text-ghost-textMuted hover:text-rose-400 rounded-lg transition-colors"
+                      title="Remove holding"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-xs text-ghost-textMuted">
+                  No individual assets recorded yet.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </Drawer>
+
+      {/* Asset Detail Drawer */}
+      <Drawer
+        isOpen={selectedAsset !== null}
+        onClose={() => setSelectedAsset(null)}
+        title={selectedAsset ? `${selectedAsset.symbol} Position Detail` : ''}
+        subtitle={selectedAsset ? `Source: ${selectedAsset.source}` : ''}
+        width="max-w-md"
+      >
+        {selectedAsset && (
+          <div className="space-y-4 text-xs">
+            <div className="flex justify-between items-center py-2.5 border-b border-ghost-border/40">
+              <span className="text-ghost-textMuted">Holdings Quantity</span>
+              <span className="font-bold text-ghost-textPrimary">
+                {selectedAsset.quantity} {selectedAsset.symbol}
+              </span>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-ghost-border flex justify-end">
+            <div className="flex justify-between items-center py-2.5 border-b border-ghost-border/40">
+              <span className="text-ghost-textMuted">Current Market Price</span>
+              <span className="font-bold text-ghost-textPrimary">
+                {priceMap[selectedAsset.symbol] ? formatVal(priceMap[selectedAsset.symbol] || 0) : 'Price unavailable'}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center py-2.5 border-b border-ghost-border/40">
+              <span className="text-ghost-textMuted">Estimated Total Value</span>
+              <span className="font-bold text-ghost-sand text-sm">
+                {priceMap[selectedAsset.symbol]
+                  ? formatVal(selectedAsset.quantity * (priceMap[selectedAsset.symbol] || 0))
+                  : 'Unavailable'}
+              </span>
+            </div>
+
+            {selectedAsset.avg_entry_price > 0 && (
+              <>
+                <div className="flex justify-between items-center py-2.5 border-b border-ghost-border/40">
+                  <span className="text-ghost-textMuted">Average Entry Price</span>
+                  <span className="text-ghost-textPrimary">{formatVal(selectedAsset.avg_entry_price)}</span>
+                </div>
+
+                <div className="flex justify-between items-center py-2.5 border-b border-ghost-border/40">
+                  <span className="text-ghost-textMuted">Unrealized P/L</span>
+                  <span
+                    className={`font-bold ${
+                      (priceMap[selectedAsset.symbol] || 0) >= selectedAsset.avg_entry_price
+                        ? 'text-emerald-400'
+                        : 'text-rose-400'
+                    }`}
+                  >
+                    {priceMap[selectedAsset.symbol]
+                      ? formatVal(
+                          selectedAsset.quantity * (priceMap[selectedAsset.symbol] || 0) -
+                            selectedAsset.quantity * selectedAsset.avg_entry_price
+                        )
+                      : 'N/A'}
+                  </span>
+                </div>
+              </>
+            )}
+
+            <div className="flex justify-between items-center py-2.5 border-b border-ghost-border/40">
+              <span className="text-ghost-textMuted">Network / Chain</span>
+              <span className="text-ghost-textPrimary">{selectedAsset.network || 'Mainnet'}</span>
+            </div>
+
+            <div className="pt-4 flex justify-end">
               <button
                 onClick={() => setSelectedAsset(null)}
-                className="px-4 py-2 bg-ghost-card border border-ghost-border text-ghost-textPrimary font-semibold rounded-xl hover:bg-ghost-border/40 transition-colors"
+                className="px-4 py-2 bg-ghost-card hover:bg-ghost-cardHover border border-ghost-border text-ghost-textPrimary font-semibold rounded-xl transition-colors"
               >
                 Close
               </button>
             </div>
           </div>
-        </div>
-      )}
-
+        )}
+      </Drawer>
     </div>
   );
 };
+
+export default PortfolioRisk;

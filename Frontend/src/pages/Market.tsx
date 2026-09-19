@@ -231,70 +231,25 @@ export const Market: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Top Header & Ticker Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-ghost-border">
+    <div className="space-y-6 max-w-7xl mx-auto font-sans">
+      {/* Top Editorial Header & Selector Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-ghost-border/60">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-ghost-textPrimary tracking-tight">
-              {selectedSymbol}
+              Markets
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-lg bg-ghost-card border border-ghost-border font-medium text-ghost-textMuted">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-ghost-card border border-ghost-border font-medium text-ghost-sand">
               Binance Spot
             </span>
           </div>
-
-          <div className="flex items-center gap-3 text-xs">
-            <span className="text-2xl font-bold text-ghost-sand tracking-tight">
-              ${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
-            </span>
-
-            <span
-              className={`inline-flex items-center gap-1 font-bold text-xs px-2 py-0.5 rounded-md ${
-                changePct >= 0
-                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-              }`}
-            >
-              {changePct >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-              <span>{changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`}</span>
-            </span>
-
-            {changeAmount !== 0 && (
-              <span className={`text-xs font-semibold ${changeAmount >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                ({changeAmount >= 0 ? `+$${changeAmount.toFixed(2)}` : `-$${Math.abs(changeAmount).toFixed(2)}`})
-              </span>
-            )}
-          </div>
+          <p className="text-xs text-ghost-textMuted">
+            Follow the cryptocurrency markets that matter to you.
+          </p>
         </div>
 
-        {/* Action Controls & Real-Time Status */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Freshness Status Pill */}
-          <div
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs shadow-sm transition-colors ${
-              isLiveStreamConnected && elapsedSeconds < 10
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                : isLiveStreamConnected && elapsedSeconds < 30
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
-            }`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                isLiveStreamConnected && elapsedSeconds < 10
-                  ? 'bg-emerald-400 animate-pulse'
-                  : isLiveStreamConnected && elapsedSeconds < 30
-                  ? 'bg-amber-400'
-                  : 'bg-rose-400'
-              }`}
-            />
-            <span className="font-semibold">{isLiveStreamConnected ? '● Live' : '○ Offline'}</span>
-            <span className="border-l border-ghost-border pl-2 text-ghost-textMuted text-[11px]">
-              {formatFreshness()}
-            </span>
-          </div>
-
+        {/* Action Controls */}
+        <div className="flex flex-wrap items-center gap-2.5">
           <AssetSelector
             selectedSymbol={selectedSymbol}
             onSelectSymbol={(s) => setSelectedSymbol(s)}
@@ -303,7 +258,7 @@ export const Market: React.FC = () => {
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
-            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-xl text-ghost-textPrimary text-xs font-semibold focus:outline-none focus:border-ghost-burgundySoft"
+            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-xl text-ghost-textPrimary text-xs font-semibold focus:outline-none focus:border-ghost-sand"
           >
             <option value="15m">15m</option>
             <option value="1h">1h</option>
@@ -314,30 +269,90 @@ export const Market: React.FC = () => {
           <button
             onClick={fetchMarketData}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-ghost-burgundy border border-ghost-burgundyLight hover:bg-ghost-burgundyLight rounded-xl text-xs font-semibold text-ghost-sand transition-colors shadow disabled:opacity-50"
-            title="Refresh REST snapshots"
+            className="p-2 rounded-xl bg-ghost-card border border-ghost-border hover:border-ghost-sand/40 text-ghost-textMuted hover:text-ghost-sand transition-colors disabled:opacity-50"
+            title="Refresh market data"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Update</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-sand' : ''}`} />
           </button>
         </div>
       </div>
 
+      {/* Hero Asset Card */}
+      <div className="p-6 sm:p-7 rounded-3xl bg-ghost-card border border-ghost-border/80 shadow-md space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-base font-bold text-ghost-textPrimary font-mono">
+              {selectedSymbol}
+            </span>
+            {/* Subtle Live Freshness Indicator */}
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-ghost-bg border border-ghost-border/60 text-[11px] text-ghost-textMuted">
+              <span className={`w-1.5 h-1.5 rounded-full ${isLiveStreamConnected ? 'bg-emerald-400 animate-pulse' : 'bg-ghost-textMuted'}`} />
+              <span className="font-semibold text-ghost-textPrimary">{isLiveStreamConnected ? 'Live' : 'Offline'}</span>
+              <span>·</span>
+              <span>{formatFreshness()}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-baseline gap-4">
+          <span className="text-3xl sm:text-5xl font-extrabold text-ghost-textPrimary tracking-tight font-mono">
+            ${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
+          </span>
+
+          <span
+            className={`inline-flex items-center gap-1 font-bold text-xs px-2.5 py-1 rounded-full border ${
+              changePct >= 0
+                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                : 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+            }`}
+          >
+            {changePct >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+            <span>{changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`}</span>
+          </span>
+
+          {changeAmount !== 0 && (
+            <span className={`text-xs font-semibold font-mono ${changeAmount >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              ({changeAmount >= 0 ? `+$${changeAmount.toFixed(2)}` : `-$${Math.abs(changeAmount).toFixed(2)}`})
+            </span>
+          )}
+        </div>
+
+        {/* 24h Summary Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-ghost-border/50 text-[11px] font-mono">
+          <div className="p-2.5 rounded-xl bg-ghost-bg border border-ghost-border/40">
+            <span className="text-[10px] text-ghost-textMuted uppercase font-sans block">24h High</span>
+            <span className="text-ghost-textPrimary font-semibold">${high24h.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-ghost-bg border border-ghost-border/40">
+            <span className="text-[10px] text-ghost-textMuted uppercase font-sans block">24h Low</span>
+            <span className="text-ghost-textPrimary font-semibold">${low24h.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-ghost-bg border border-ghost-border/40">
+            <span className="text-[10px] text-ghost-textMuted uppercase font-sans block">24h Volume ({baseSymbol})</span>
+            <span className="text-ghost-textPrimary font-semibold">{baseVolume.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-ghost-bg border border-ghost-border/40">
+            <span className="text-[10px] text-ghost-textMuted uppercase font-sans block">Top Bid / Ask Spread</span>
+            <span className="text-ghost-sand font-semibold">{spreadBps} bps</span>
+          </div>
+        </div>
+      </div>
+
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-ghost-border/60 pb-1">
+      <div className="flex flex-wrap items-center gap-2 border-b border-ghost-border/60 pb-1">
         {[
-          { id: 'overview', label: 'Overview & Key Stats' },
-          { id: 'chart', label: 'OHLCV Candles' },
-          { id: 'orderbook', label: 'Live Order Book' },
-          { id: 'statistics', label: 'Diagnostics & Source' },
+          { id: 'overview', label: 'Price Chart & Key Stats' },
+          { id: 'orderbook', label: 'Order Book Depth' },
+          { id: 'chart', label: 'Candlestick Feed' },
+          { id: 'statistics', label: 'Exchange Provenance' },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all duration-200 ${
               activeTab === tab.id
-                ? 'bg-ghost-burgundy text-ghost-sand border border-ghost-burgundyLight shadow'
-                : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/60'
+                ? 'bg-ghost-burgundy/40 text-ghost-sand border border-ghost-burgundyLight shadow-xs'
+                : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/50'
             }`}
           >
             {tab.label}

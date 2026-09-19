@@ -16,6 +16,8 @@ import {
   Minus,
 } from 'lucide-react';
 import { AssetSelector } from '../components/common/AssetSelector';
+import { PageHeader } from '../components/common/PageHeader';
+import { Card } from '../components/common/Card';
 import { signalsApi } from '../api';
 import {
   MarketContextResult,
@@ -40,17 +42,17 @@ const formatMetricValue = (key: string, value: any): string => {
 const EvidenceCard: React.FC<{ title: string; data: any; fallback: string }> = ({ title, data, fallback }) => {
   if (!data) {
     return (
-      <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-1">
+      <div className="p-3.5 rounded-xl bg-ghost-bg/70 border border-ghost-border/60 space-y-1">
         <span className="text-[11px] font-bold text-ghost-sand block">{title}</span>
         <p className="text-xs text-ghost-textPrimary leading-relaxed">{fallback}</p>
       </div>
     );
   }
 
-  // If it happens to be a string (legacy data)
+  // If legacy string
   if (typeof data === 'string') {
     return (
-      <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-1">
+      <div className="p-3.5 rounded-xl bg-ghost-bg/70 border border-ghost-border/60 space-y-1">
         <span className="text-[11px] font-bold text-ghost-sand block">{title}</span>
         <p className="text-xs text-ghost-textPrimary leading-relaxed">{data}</p>
       </div>
@@ -62,11 +64,11 @@ const EvidenceCard: React.FC<{ title: string; data: any; fallback: string }> = (
   const hasMetrics = Object.keys(metrics).length > 0;
 
   return (
-    <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-2 flex flex-col">
+    <div className="p-3.5 rounded-xl bg-ghost-bg/70 border border-ghost-border/60 space-y-2 flex flex-col">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-bold text-ghost-sand block">{title}</span>
         {status && (
-          <span className="text-[10px] font-semibold text-ghost-textPrimary bg-ghost-bg px-2 py-0.5 rounded-full border border-ghost-border/50 truncate max-w-[120px]">
+          <span className="text-[10px] font-semibold text-ghost-textPrimary bg-ghost-card px-2 py-0.5 rounded-full border border-ghost-border/60 truncate max-w-[120px]">
             {status}
           </span>
         )}
@@ -84,7 +86,7 @@ const EvidenceCard: React.FC<{ title: string; data: any; fallback: string }> = (
       )}
 
       {observation && (
-        <p className="text-xs text-ghost-textMuted leading-relaxed pt-1.5 border-t border-ghost-border/30 mt-auto">
+        <p className="text-xs text-ghost-textMuted leading-relaxed pt-1.5 border-t border-ghost-border/40 mt-auto">
           {observation}
         </p>
       )}
@@ -123,7 +125,7 @@ export const Signals: React.FC = () => {
       if (res && res.data) {
         setCurrentSignal(res.data);
       }
-    } catch (err: any) {
+    } catch {
       setSignalError('Analysis cannot currently be completed: Live market telemetry unavailable.');
     } finally {
       setIsSignalLoading(false);
@@ -295,39 +297,33 @@ export const Signals: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 py-2 animate-in fade-in duration-200">
+    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-200">
       {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-ghost-border/70 pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-ghost-textPrimary">SIGNAL</h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-lg bg-ghost-card border border-ghost-border text-ghost-sand font-semibold">
-              Market Context Engine
-            </span>
-          </div>
-          <p className="text-xs text-ghost-textMuted mt-1">
-            "We don't generate trading signals. We generate market context."
-          </p>
-        </div>
-
-        {/* Quick controls if analysis is active */}
-        {analysisResult && (
-          <div className="flex items-center gap-3">
+      <PageHeader
+        title="SIGNAL"
+        subtitle='"We don&#39;t generate trading signals. We generate market context."'
+        badge={
+          <span className="text-xs px-2.5 py-0.5 rounded-lg bg-ghost-card border border-ghost-border text-ghost-sand font-semibold">
+            Market Context Engine
+          </span>
+        }
+        actions={
+          analysisResult ? (
             <button
               onClick={handleReset}
-              className="px-3.5 py-1.5 rounded-lg bg-ghost-card hover:bg-ghost-border border border-ghost-border text-xs font-medium text-ghost-textPrimary transition-colors flex items-center gap-1.5 shadow-sm"
+              className="px-3.5 py-1.5 rounded-xl bg-ghost-burgundy hover:bg-ghost-burgundyLight text-ghost-sand border border-ghost-sand/30 text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>New Analysis</span>
             </button>
-          </div>
-        )}
-      </div>
+          ) : undefined
+        }
+      />
 
       {/* =================================================================== */}
       {/* LIVE MARKET SIGNAL & EVIDENCE (Binance Spot)                        */}
       {/* =================================================================== */}
-      <div className="p-6 rounded-2xl bg-ghost-card border border-ghost-border shadow-lg space-y-5">
+      <Card className="space-y-5">
         {/* Market Selector Bar */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-ghost-border/70 pb-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -342,7 +338,7 @@ export const Signals: React.FC = () => {
           <button
             onClick={fetchLiveSignal}
             disabled={isSignalLoading}
-            className="px-3.5 py-1.5 rounded-xl bg-ghost-card hover:bg-ghost-border text-xs font-semibold text-ghost-sand border border-ghost-border transition-colors flex items-center gap-2 disabled:opacity-50"
+            className="px-3.5 py-1.5 rounded-xl bg-ghost-bg hover:bg-ghost-cardHover text-xs font-semibold text-ghost-sand border border-ghost-border transition-colors flex items-center gap-2 disabled:opacity-50"
             title="Refresh real Binance Spot market indicators"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-ghost-sand ${isSignalLoading ? 'animate-spin' : ''}`} />
@@ -462,7 +458,7 @@ export const Signals: React.FC = () => {
             </div>
           </div>
         ) : null}
-      </div>
+      </Card>
 
       {error && (
         <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-3">
@@ -475,7 +471,7 @@ export const Signals: React.FC = () => {
       {/* 1. QUALITY GATE FAILURE STATE                                       */}
       {/* =================================================================== */}
       {analysisResult && !analysisResult.quality_gate.quality_gate_passed && (
-        <div className="p-8 rounded-2xl bg-ghost-card border border-rose-500/30 shadow-xl space-y-6 max-w-2xl mx-auto text-center animate-in fade-in duration-200">
+        <Card className="border-rose-500/30 text-center max-w-2xl mx-auto space-y-6 py-8">
           <div className="inline-flex items-center justify-center p-3.5 rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20 mb-2">
             <AlertTriangle className="w-8 h-8" />
           </div>
@@ -531,7 +527,7 @@ export const Signals: React.FC = () => {
               Upload Clearer Screenshot
             </button>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* =================================================================== */}
@@ -540,7 +536,7 @@ export const Signals: React.FC = () => {
       {analysisResult && analysisResult.quality_gate.quality_gate_passed && (
         <div className="space-y-6 animate-in fade-in duration-200">
           {/* Market State Header Banner */}
-          <div className="p-6 rounded-2xl bg-ghost-card border border-ghost-border shadow-lg space-y-4">
+          <Card className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ghost-border/60 pb-3 text-xs">
               <div className="flex flex-wrap items-center gap-4 text-ghost-textMuted">
                 <span>
@@ -591,10 +587,10 @@ export const Signals: React.FC = () => {
                 </span>
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* MARKET MAP (7-row Structured Table) */}
-          <div className="p-6 rounded-2xl bg-ghost-card border border-ghost-border shadow-md space-y-4">
+          <Card className="space-y-4">
             <div className="flex items-center justify-between border-b border-ghost-border pb-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-ghost-textMuted flex items-center gap-2">
                 <Compass className="w-4 h-4 text-ghost-sand" />
@@ -665,12 +661,12 @@ export const Signals: React.FC = () => {
                 </tbody>
               </table>
             </div>
-          </div>
+          </Card>
 
           {/* Evidence Grid: Supporting vs Conflicting */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Supporting Evidence */}
-            <div className="p-5 rounded-2xl bg-ghost-card border border-ghost-border space-y-3">
+            <Card className="space-y-3">
               <div className="flex items-center gap-2 border-b border-ghost-border/60 pb-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
@@ -685,10 +681,10 @@ export const Signals: React.FC = () => {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Card>
 
             {/* Conflicting / Limiting Evidence */}
-            <div className="p-5 rounded-2xl bg-ghost-card border border-ghost-border space-y-3">
+            <Card className="space-y-3">
               <div className="flex items-center gap-2 border-b border-ghost-border/60 pb-2">
                 <AlertTriangle className="w-4 h-4 text-amber-300" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-amber-300">
@@ -703,21 +699,21 @@ export const Signals: React.FC = () => {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Card>
           </div>
 
           {/* CURRENT CONTEXT SYNTHESIS */}
-          <div className="p-5 rounded-2xl bg-ghost-card border border-ghost-border space-y-2">
+          <Card className="space-y-2">
             <span className="text-[11px] font-bold text-ghost-textMuted uppercase tracking-wider block">
               CURRENT CONTEXT
             </span>
             <p className="text-sm text-slate-200 leading-relaxed font-normal bg-ghost-bg p-4 rounded-xl border border-ghost-border/60">
               {analysisResult.current_context}
             </p>
-          </div>
+          </Card>
 
           {/* WHAT TO WATCH (Context Change Conditions) */}
-          <div className="p-5 rounded-2xl bg-ghost-card border border-ghost-border space-y-3">
+          <Card className="space-y-3">
             <div className="flex items-center justify-between border-b border-ghost-border/60 pb-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-ghost-sand flex items-center gap-2">
                 <Activity className="w-4 h-4 text-ghost-sand" />
@@ -737,11 +733,11 @@ export const Signals: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* MULTI-TIMEFRAME SYNTHESIS (if present) */}
           {analysisResult.multi_timeframe_synthesis && (
-            <div className="p-5 rounded-2xl bg-ghost-card border border-ghost-border space-y-3">
+            <Card className="space-y-3">
               <div className="flex items-center gap-2 border-b border-ghost-border/60 pb-2">
                 <Layers className="w-4 h-4 text-ghost-sand" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-ghost-textPrimary">
@@ -763,7 +759,7 @@ export const Signals: React.FC = () => {
               <p className="text-xs text-slate-300 bg-ghost-bg/70 p-3 rounded-xl border border-ghost-border/40">
                 {analysisResult.multi_timeframe_synthesis}
               </p>
-            </div>
+            </Card>
           )}
 
           {/* DATA LIMITATIONS (Only displayed when limitations actually exist) */}
@@ -785,7 +781,7 @@ export const Signals: React.FC = () => {
           <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-ghost-border/70">
             <button
               onClick={() => window.print()}
-              className="px-4 py-2 rounded-xl bg-ghost-card hover:bg-ghost-border border border-ghost-border text-xs font-semibold text-ghost-textMuted hover:text-ghost-textPrimary transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-ghost-card hover:bg-ghost-cardHover border border-ghost-border text-xs font-semibold text-ghost-textMuted hover:text-ghost-textPrimary transition-colors flex items-center gap-1.5"
             >
               <FileText className="w-3.5 h-3.5" />
               <span>Print Context Report</span>
@@ -806,7 +802,7 @@ export const Signals: React.FC = () => {
       {/* 3. STEP-BY-STEP INTAKE WORKFLOW (When no active result)             */}
       {/* =================================================================== */}
       {!analysisResult && (
-        <div className="p-6 sm:p-8 rounded-2xl bg-ghost-card border border-ghost-border shadow-xl space-y-6">
+        <Card className="space-y-6">
           <div className="space-y-1 border-b border-ghost-border/70 pb-4">
             <h2 className="text-base font-semibold text-ghost-textPrimary">Chart Context Intake</h2>
             <p className="text-xs text-ghost-textMuted">
@@ -1005,7 +1001,7 @@ export const Signals: React.FC = () => {
               )}
             </button>
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );

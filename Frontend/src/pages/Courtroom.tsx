@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { AssetSelector } from '../components/common/AssetSelector';
 import { EvidenceModal } from '../components/courtroom/EvidenceModal';
+import { PageHeader } from '../components/common/PageHeader';
+import { Card } from '../components/common/Card';
 import { courtroomApi } from '../api/courtroom';
 import {
   CourtroomCase,
@@ -70,7 +72,7 @@ export const Courtroom: React.FC = () => {
       if (res && res.data) {
         setRecentCases(res.data);
       }
-    } catch (err) {
+    } catch {
       // Non-blocking
     }
   };
@@ -154,7 +156,7 @@ export const Courtroom: React.FC = () => {
         setCurrentCase(res.data);
         setActiveTab('case-file');
       }
-    } catch (err) {
+    } catch {
       setCurrentCase(caseObj);
       setActiveTab('case-file');
     } finally {
@@ -194,22 +196,17 @@ export const Courtroom: React.FC = () => {
   // =========================================================================
   if (!currentCase) {
     return (
-      <div className="max-w-4xl mx-auto space-y-8 py-2 animate-in fade-in duration-300">
+      <div className="max-w-4xl mx-auto space-y-8 py-2 animate-in fade-in duration-200">
         {/* Top Title Banner */}
-        <div className="flex items-center justify-between border-b border-ghost-border/70 pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <Scale className="w-6 h-6 text-ghost-sand" />
-              <h1 className="text-2xl font-bold tracking-tight text-ghost-textPrimary">COURTROOM</h1>
-              <span className="text-xs px-2.5 py-0.5 rounded-lg bg-ghost-burgundy text-ghost-sand font-bold border border-ghost-burgundyLight">
-                Adversarial Intelligence
-              </span>
-            </div>
-            <p className="text-xs text-ghost-textMuted mt-1">
-              Challenge your thinking before you act. Present a market thesis and stress-test it against real market evidence.
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title="COURTROOM"
+          subtitle="Challenge your thinking before you act. Present a market thesis and stress-test it against real market evidence."
+          badge={
+            <span className="text-xs px-2.5 py-0.5 rounded-lg bg-ghost-burgundy text-ghost-sand font-bold border border-ghost-burgundyLight">
+              Adversarial Intelligence
+            </span>
+          }
+        />
 
         {error && (
           <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-3">
@@ -219,175 +216,177 @@ export const Courtroom: React.FC = () => {
         )}
 
         {/* Form Container */}
-        <form onSubmit={handleConveneCourt} className="p-6 sm:p-8 rounded-2xl bg-ghost-card border border-ghost-border shadow-xl space-y-6">
-          <div className="space-y-1 border-b border-ghost-border/70 pb-4">
-            <h2 className="text-base font-bold text-ghost-textPrimary">State Your Market Thesis</h2>
-            <p className="text-xs text-ghost-textMuted">
-              Provide your hypothesis regarding asset price movement, timeframe, and supporting rationale.
-            </p>
-          </div>
-
-          {/* Symbol & Timeframe Selection */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-bold text-ghost-textMuted uppercase tracking-wider mb-2">
-                Target Market Asset
-              </label>
-              <AssetSelector
-                selectedSymbol={symbol.includes('/') ? symbol : `${symbol.slice(0, -4)}/${symbol.slice(-4)}`}
-                onSelectSymbol={(s) => setSymbol(s.replace('/', ''))}
-              />
+        <Card className="space-y-6">
+          <form onSubmit={handleConveneCourt} className="space-y-6">
+            <div className="space-y-1 border-b border-ghost-border/70 pb-4">
+              <h2 className="text-base font-bold text-ghost-textPrimary">State Your Market Thesis</h2>
+              <p className="text-xs text-ghost-textMuted">
+                Provide your hypothesis regarding asset price movement, timeframe, and supporting rationale.
+              </p>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-ghost-textMuted uppercase tracking-wider mb-2">
-                Analysis Timeframe
-              </label>
-              <div className="grid grid-cols-6 gap-1 bg-ghost-darkest p-1 rounded-xl border border-ghost-border">
-                {TIMEFRAMES.map((tf) => (
-                  <button
-                    key={tf}
-                    type="button"
-                    onClick={() => setTimeframe(tf)}
-                    className={`py-2 text-xs font-semibold rounded-lg transition-colors ${
-                      timeframe === tf
-                        ? 'bg-ghost-burgundy text-ghost-sand shadow border border-ghost-burgundyLight font-bold'
-                        : 'text-ghost-textMuted hover:text-ghost-textPrimary'
-                    }`}
-                  >
-                    {tf}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Thesis Input Area */}
-          <div>
-            <label className="block text-xs font-bold text-ghost-textMuted uppercase tracking-wider mb-2">
-              Your Market Thesis
-            </label>
-            <textarea
-              value={thesis}
-              onChange={(e) => setThesis(e.target.value)}
-              placeholder="e.g. I think BTC is bullish because momentum is increasing and price is defending higher lows on the 4H chart..."
-              className="w-full h-28 p-3.5 rounded-xl bg-ghost-darkest border border-ghost-border text-xs text-ghost-textPrimary placeholder:text-ghost-textDim focus:outline-none focus:border-ghost-burgundySoft leading-relaxed"
-              required
-            />
-
-            {/* Quick Inspiration Chips */}
-            <div className="mt-2.5">
-              <span className="text-xs text-ghost-textMuted block mb-1.5">Or try an example thesis:</span>
-              <div className="flex flex-wrap gap-1.5">
-                {SAMPLE_THESES.map((sample, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setThesis(sample)}
-                    className="text-xs px-2.5 py-1 rounded-lg bg-ghost-darkest hover:bg-ghost-border/60 text-ghost-textMuted hover:text-ghost-textPrimary transition-colors text-left border border-ghost-border/40"
-                  >
-                    "{sample.slice(0, 45)}..."
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Optional Supporting Context */}
-          <div className="pt-2 border-t border-ghost-border/60 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-ghost-textMuted uppercase tracking-wider">
-                Optional Context
-              </span>
-              <span className="text-xs text-ghost-textMuted">(Optional)</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Symbol & Timeframe Selection */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label className="block text-xs text-ghost-textMuted mb-1 font-semibold">Key Support Level ($)</label>
-                <input
-                  type="number"
-                  step="any"
-                  value={supportLevel}
-                  onChange={(e) => setSupportLevel(e.target.value)}
-                  placeholder="e.g. 81000"
-                  className="w-full px-3 py-2 rounded-xl bg-ghost-darkest border border-ghost-border text-xs text-ghost-textPrimary focus:outline-none focus:border-ghost-burgundySoft"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-ghost-textMuted mb-1 font-semibold">Key Resistance Level ($)</label>
-                <input
-                  type="number"
-                  step="any"
-                  value={resistanceLevel}
-                  onChange={(e) => setResistanceLevel(e.target.value)}
-                  placeholder="e.g. 85000"
-                  className="w-full px-3 py-2 rounded-xl bg-ghost-darkest border border-ghost-border text-xs text-ghost-textPrimary focus:outline-none focus:border-ghost-burgundySoft"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs text-ghost-textMuted mb-1 font-semibold">Additional Notes</label>
-              <input
-                type="text"
-                value={userNotes}
-                onChange={(e) => setUserNotes(e.target.value)}
-                placeholder="e.g. Looking at recent 4H candle volume rejection and moving average touch"
-                className="w-full px-3 py-2 rounded-xl bg-ghost-darkest border border-ghost-border text-xs text-ghost-textPrimary focus:outline-none focus:border-ghost-burgundySoft"
-              />
-            </div>
-
-            {/* Optional Screenshot Upload */}
-            <div>
-              <label className="block text-xs text-ghost-textMuted mb-1 font-semibold">Attach Chart Screenshot</label>
-              <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-ghost-darkest hover:bg-ghost-border/60 border border-ghost-border text-xs font-medium text-ghost-textPrimary cursor-pointer transition-colors">
-                  <Upload className="w-4 h-4 text-ghost-sand" />
-                  <span>Choose Image</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
+                <label className="block text-xs font-bold text-ghost-textMuted uppercase tracking-wider mb-2">
+                  Target Market Asset
                 </label>
-                {screenshotPreview && (
-                  <span className="text-xs text-emerald-400 flex items-center gap-1 font-semibold">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Screenshot attached
-                  </span>
-                )}
+                <AssetSelector
+                  selectedSymbol={symbol.includes('/') ? symbol : `${symbol.slice(0, -4)}/${symbol.slice(-4)}`}
+                  onSelectSymbol={(s) => setSymbol(s.replace('/', ''))}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-ghost-textMuted uppercase tracking-wider mb-2">
+                  Analysis Timeframe
+                </label>
+                <div className="grid grid-cols-6 gap-1 bg-ghost-bg p-1 rounded-xl border border-ghost-border">
+                  {TIMEFRAMES.map((tf) => (
+                    <button
+                      key={tf}
+                      type="button"
+                      onClick={() => setTimeframe(tf)}
+                      className={`py-2 text-xs font-semibold rounded-lg transition-colors ${
+                        timeframe === tf
+                          ? 'bg-ghost-burgundy text-ghost-sand shadow border border-ghost-burgundyLight font-bold'
+                          : 'text-ghost-textMuted hover:text-ghost-textPrimary'
+                      }`}
+                    >
+                      {tf}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Submit Action */}
-          <div className="pt-4">
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3.5 px-6 rounded-xl bg-ghost-burgundy hover:bg-ghost-burgundyLight text-ghost-sand font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50"
-            >
-              {isLoading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin text-ghost-sand" />
-                  <span>{loadingStep}</span>
-                </>
-              ) : (
-                <>
-                  <Scale className="w-4 h-4 text-ghost-sand" />
-                  <span>Open Court</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+            {/* Thesis Input Area */}
+            <div>
+              <label className="block text-xs font-bold text-ghost-textMuted uppercase tracking-wider mb-2">
+                Your Market Thesis
+              </label>
+              <textarea
+                value={thesis}
+                onChange={(e) => setThesis(e.target.value)}
+                placeholder="e.g. I think BTC is bullish because momentum is increasing and price is defending higher lows on the 4H chart..."
+                className="w-full h-28 p-3.5 rounded-xl bg-ghost-bg border border-ghost-border text-xs text-ghost-textPrimary placeholder:text-ghost-textDim focus:outline-none focus:border-ghost-sand leading-relaxed"
+                required
+              />
+
+              {/* Quick Inspiration Chips */}
+              <div className="mt-2.5">
+                <span className="text-xs text-ghost-textMuted block mb-1.5">Or try an example thesis:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {SAMPLE_THESES.map((sample, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setThesis(sample)}
+                      className="text-xs px-2.5 py-1 rounded-lg bg-ghost-bg hover:bg-ghost-cardHover text-ghost-textMuted hover:text-ghost-textPrimary transition-colors text-left border border-ghost-border/40"
+                    >
+                      "{sample.slice(0, 45)}..."
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Optional Supporting Context */}
+            <div className="pt-2 border-t border-ghost-border/60 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-ghost-textMuted uppercase tracking-wider">
+                  Optional Context
+                </span>
+                <span className="text-xs text-ghost-textMuted">(Optional)</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-ghost-textMuted mb-1 font-semibold">Key Support Level ($)</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={supportLevel}
+                    onChange={(e) => setSupportLevel(e.target.value)}
+                    placeholder="e.g. 81000"
+                    className="w-full px-3 py-2 rounded-xl bg-ghost-bg border border-ghost-border text-xs text-ghost-textPrimary focus:outline-none focus:border-ghost-sand"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-ghost-textMuted mb-1 font-semibold">Key Resistance Level ($)</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={resistanceLevel}
+                    onChange={(e) => setResistanceLevel(e.target.value)}
+                    placeholder="e.g. 85000"
+                    className="w-full px-3 py-2 rounded-xl bg-ghost-bg border border-ghost-border text-xs text-ghost-textPrimary focus:outline-none focus:border-ghost-sand"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-ghost-textMuted mb-1 font-semibold">Additional Notes</label>
+                <input
+                  type="text"
+                  value={userNotes}
+                  onChange={(e) => setUserNotes(e.target.value)}
+                  placeholder="e.g. Looking at recent 4H candle volume rejection and moving average touch"
+                  className="w-full px-3 py-2 rounded-xl bg-ghost-bg border border-ghost-border text-xs text-ghost-textPrimary focus:outline-none focus:border-ghost-sand"
+                />
+              </div>
+
+              {/* Optional Screenshot Upload */}
+              <div>
+                <label className="block text-xs text-ghost-textMuted mb-1 font-semibold">Attach Chart Screenshot</label>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-ghost-bg hover:bg-ghost-cardHover border border-ghost-border text-xs font-medium text-ghost-textPrimary cursor-pointer transition-colors">
+                    <Upload className="w-4 h-4 text-ghost-sand" />
+                    <span>Choose Image</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  {screenshotPreview && (
+                    <span className="text-xs text-emerald-400 flex items-center gap-1 font-semibold">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Screenshot attached
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Submit Action */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3.5 px-6 rounded-xl bg-ghost-burgundy hover:bg-ghost-burgundyLight text-ghost-sand font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin text-ghost-sand" />
+                    <span>{loadingStep}</span>
+                  </>
+                ) : (
+                  <>
+                    <Scale className="w-4 h-4 text-ghost-sand" />
+                    <span>Open Court</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </Card>
 
         {/* Recent Cases Section */}
         {recentCases.length > 0 && (
-          <div className="p-6 rounded-2xl bg-ghost-card border border-ghost-border shadow-sm">
-            <div className="flex items-center justify-between mb-4">
+          <Card className="space-y-4">
+            <div className="flex items-center justify-between mb-2 pb-2 border-b border-ghost-border/40">
               <h3 className="text-xs font-bold text-ghost-textMuted uppercase tracking-wider">
                 Recent Courtroom Cases
               </h3>
@@ -399,7 +398,7 @@ export const Courtroom: React.FC = () => {
                 <div
                   key={c.case_id}
                   onClick={() => handleReopenCase(c)}
-                  className="p-3.5 rounded-xl bg-ghost-darkest/60 hover:bg-ghost-border/40 border border-ghost-border cursor-pointer transition-colors flex items-center justify-between group"
+                  className="p-3.5 rounded-xl bg-ghost-bg/70 hover:bg-ghost-cardHover border border-ghost-border cursor-pointer transition-colors flex items-center justify-between group"
                 >
                   <div className="space-y-1 pr-2">
                     <div className="flex items-center gap-2">
@@ -417,7 +416,7 @@ export const Courtroom: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
       </div>
     );
@@ -433,7 +432,7 @@ export const Courtroom: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-6 py-2 animate-in fade-in duration-200">
       {/* Active Case Top Header */}
-      <div className="p-5 rounded-2xl bg-ghost-card border border-ghost-border shadow-lg space-y-4">
+      <Card className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-sm font-bold text-ghost-sand tracking-wider">
@@ -443,7 +442,7 @@ export const Courtroom: React.FC = () => {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               {currentCase.status}
             </span>
-            <span className="text-xs px-2.5 py-0.5 rounded-lg bg-ghost-darkest border border-ghost-border text-ghost-textPrimary font-semibold">
+            <span className="text-xs px-2.5 py-0.5 rounded-lg bg-ghost-bg border border-ghost-border text-ghost-textPrimary font-semibold">
               {currentCase.symbol} • {currentCase.timeframe}
             </span>
             <span
@@ -465,7 +464,7 @@ export const Courtroom: React.FC = () => {
             <button
               onClick={handleRefreshEvidence}
               disabled={isRefreshing}
-              className="px-3.5 py-1.5 rounded-xl bg-ghost-card hover:bg-ghost-border text-xs font-semibold text-ghost-sand border border-ghost-border transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              className="px-3.5 py-1.5 rounded-xl bg-ghost-bg hover:bg-ghost-cardHover text-xs font-semibold text-ghost-sand border border-ghost-border transition-colors flex items-center gap-1.5 disabled:opacity-50"
               title="Refresh live Binance Spot telemetry and re-evaluate courtroom arguments"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-ghost-sand ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -473,7 +472,7 @@ export const Courtroom: React.FC = () => {
             </button>
             <button
               onClick={handleResetNewCase}
-              className="px-3.5 py-1.5 rounded-xl bg-ghost-card hover:bg-ghost-border text-xs font-semibold text-ghost-textMuted hover:text-ghost-textPrimary border border-ghost-border transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-xl bg-ghost-bg hover:bg-ghost-cardHover text-xs font-semibold text-ghost-textMuted hover:text-ghost-textPrimary border border-ghost-border transition-colors flex items-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>New Thesis</span>
@@ -482,7 +481,7 @@ export const Courtroom: React.FC = () => {
         </div>
 
         {/* User Thesis Callout */}
-        <div className="p-4 rounded-xl bg-ghost-darkest border border-ghost-border flex items-start gap-3">
+        <div className="p-4 rounded-xl bg-ghost-bg/70 border border-ghost-border flex items-start gap-3">
           <Scale className="w-5 h-5 text-ghost-sand flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <span className="text-[11px] font-bold text-ghost-textMuted uppercase tracking-wider block mb-0.5">
@@ -517,7 +516,7 @@ export const Courtroom: React.FC = () => {
             <span className="text-emerald-400 font-semibold">● Live</span>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Interactive Phase Stepper / Tabs */}
       <div className="flex overflow-x-auto no-scrollbar gap-1 p-1 bg-ghost-card rounded-2xl border border-ghost-border text-xs">
@@ -597,7 +596,7 @@ export const Courtroom: React.FC = () => {
       {/* PHASE 1: CASE FILE */}
       {activeTab === 'case-file' && (
         <div className="space-y-6 animate-in fade-in duration-150">
-          <div className="p-6 rounded-2xl bg-ghost-card border border-ghost-border space-y-5">
+          <Card className="space-y-5">
             <div className="flex items-center justify-between border-b border-ghost-border pb-3">
               <h3 className="text-base font-bold text-ghost-textPrimary flex items-center gap-2">
                 <FileText className="w-5 h-5 text-ghost-sand" />
@@ -610,21 +609,21 @@ export const Courtroom: React.FC = () => {
 
             {/* Core Snapshot Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="p-3.5 rounded-xl bg-ghost-darkest border border-ghost-border">
+              <div className="p-3.5 rounded-xl bg-ghost-bg/70 border border-ghost-border">
                 <span className="text-xs text-ghost-textMuted block mb-1">Evaluated Stance</span>
                 <span className="text-sm font-bold text-ghost-textPrimary">{currentCase.detected_stance}</span>
               </div>
-              <div className="p-3.5 rounded-xl bg-ghost-darkest border border-ghost-border">
+              <div className="p-3.5 rounded-xl bg-ghost-bg/70 border border-ghost-border">
                 <span className="text-xs text-ghost-textMuted block mb-1">Timeframe Horizon</span>
                 <span className="text-sm font-bold text-ghost-textPrimary">{currentCase.timeframe}</span>
               </div>
-              <div className="p-3.5 rounded-xl bg-ghost-darkest border border-ghost-border">
+              <div className="p-3.5 rounded-xl bg-ghost-bg/70 border border-ghost-border">
                 <span className="text-xs text-ghost-textMuted block mb-1">Orderbook Imbalance</span>
                 <span className="text-sm font-bold text-ghost-textPrimary">
                   {snapshot.orderbook_imbalance !== undefined ? snapshot.orderbook_imbalance.toFixed(4) : 'N/A'}
                 </span>
               </div>
-              <div className="p-3.5 rounded-xl bg-ghost-darkest border border-ghost-border">
+              <div className="p-3.5 rounded-xl bg-ghost-bg/70 border border-ghost-border">
                 <span className="text-xs text-ghost-textMuted block mb-1">MACD Histogram</span>
                 <span className="text-sm font-bold text-ghost-textPrimary">
                   {snapshot.macd_hist !== undefined ? snapshot.macd_hist.toFixed(4) : 'N/A'}
@@ -634,7 +633,7 @@ export const Courtroom: React.FC = () => {
 
             {/* User Notes or Screenshot if present */}
             {currentCase.user_notes && (
-              <div className="p-4 rounded-xl bg-ghost-darkest border border-ghost-border space-y-1">
+              <div className="p-4 rounded-xl bg-ghost-bg/70 border border-ghost-border space-y-1">
                 <span className="text-xs font-bold text-ghost-textMuted uppercase tracking-wider">
                   User Context &amp; Notes
                 </span>
@@ -643,7 +642,7 @@ export const Courtroom: React.FC = () => {
             )}
 
             {screenshotPreview && (
-              <div className="p-4 rounded-xl bg-ghost-darkest border border-ghost-border space-y-2">
+              <div className="p-4 rounded-xl bg-ghost-bg/70 border border-ghost-border space-y-2">
                 <span className="text-xs font-bold text-ghost-textMuted uppercase tracking-wider block">
                   Attached User Chart Screenshot
                 </span>
@@ -663,7 +662,7 @@ export const Courtroom: React.FC = () => {
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
-          </div>
+          </Card>
         </div>
       )}
 
@@ -684,9 +683,9 @@ export const Courtroom: React.FC = () => {
 
           <div className="space-y-3">
             {currentCase.prosecution_arguments.map((arg, idx) => (
-              <div
+              <Card
                 key={arg.id || idx}
-                className="p-5 rounded-2xl bg-ghost-card border border-ghost-border hover:border-ghost-border/80 transition-all space-y-3"
+                className="hover:border-ghost-border/80 transition-all space-y-3"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="space-y-1">
@@ -694,7 +693,7 @@ export const Courtroom: React.FC = () => {
                       <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-400">
                         ARGUMENT #{idx + 1}
                       </span>
-                      <span className="text-xs px-2 py-0.5 rounded-md bg-ghost-darkest border border-ghost-border text-slate-300">
+                      <span className="text-xs px-2 py-0.5 rounded-md bg-ghost-bg border border-ghost-border text-slate-300">
                         {arg.strength} Evidence
                       </span>
                       <span className="text-xs text-ghost-textMuted">• {arg.updated_ago}</span>
@@ -704,14 +703,14 @@ export const Courtroom: React.FC = () => {
 
                   <button
                     onClick={() => setSelectedArgument(arg)}
-                    className="px-3.5 py-1.5 rounded-xl bg-ghost-darkest hover:bg-ghost-border/60 text-xs font-semibold text-ghost-sand border border-ghost-border transition-colors flex items-center gap-1.5"
+                    className="px-3.5 py-1.5 rounded-xl bg-ghost-bg hover:bg-ghost-cardHover text-xs font-semibold text-ghost-sand border border-ghost-border transition-colors flex items-center gap-1.5"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>View Evidence ({arg.evidence_items.length})</span>
                   </button>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-ghost-darkest border border-ghost-border/60 text-sm text-slate-200">
+                <div className="p-3.5 rounded-xl bg-ghost-bg/70 border border-ghost-border/60 text-sm text-slate-200">
                   <strong className="text-ghost-textMuted block text-xs uppercase mb-1">Observation:</strong>
                   {arg.observation}
                 </div>
@@ -720,7 +719,7 @@ export const Courtroom: React.FC = () => {
                   <strong className="text-slate-300">Impact on Thesis: </strong>
                   {arg.why_it_matters}
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
 
@@ -759,9 +758,9 @@ export const Courtroom: React.FC = () => {
 
           <div className="space-y-3">
             {currentCase.defense_arguments.map((arg, idx) => (
-              <div
+              <Card
                 key={arg.id || idx}
-                className="p-5 rounded-2xl bg-ghost-card border border-ghost-border hover:border-ghost-border/80 transition-all space-y-3"
+                className="hover:border-ghost-border/80 transition-all space-y-3"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="space-y-1">
@@ -769,7 +768,7 @@ export const Courtroom: React.FC = () => {
                       <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400">
                         ARGUMENT #{idx + 1}
                       </span>
-                      <span className="text-xs px-2 py-0.5 rounded-md bg-ghost-darkest border border-ghost-border text-slate-300">
+                      <span className="text-xs px-2 py-0.5 rounded-md bg-ghost-bg border border-ghost-border text-slate-300">
                         {arg.strength} Evidence
                       </span>
                       <span className="text-xs text-ghost-textMuted">• {arg.updated_ago}</span>
@@ -779,14 +778,14 @@ export const Courtroom: React.FC = () => {
 
                   <button
                     onClick={() => setSelectedArgument(arg)}
-                    className="px-3.5 py-1.5 rounded-xl bg-ghost-darkest hover:bg-ghost-border/60 text-xs font-semibold text-ghost-sand border border-ghost-border transition-colors flex items-center gap-1.5"
+                    className="px-3.5 py-1.5 rounded-xl bg-ghost-bg hover:bg-ghost-cardHover text-xs font-semibold text-ghost-sand border border-ghost-border transition-colors flex items-center gap-1.5"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>View Evidence ({arg.evidence_items.length})</span>
                   </button>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-ghost-darkest border border-ghost-border/60 text-sm text-slate-200">
+                <div className="p-3.5 rounded-xl bg-ghost-bg/70 border border-ghost-border/60 text-sm text-slate-200">
                   <strong className="text-ghost-textMuted block text-xs uppercase mb-1">Observation:</strong>
                   {arg.observation}
                 </div>
@@ -795,7 +794,7 @@ export const Courtroom: React.FC = () => {
                   <strong className="text-slate-300">Why it Defends the Thesis: </strong>
                   {arg.why_it_matters}
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
 
@@ -833,11 +832,11 @@ export const Courtroom: React.FC = () => {
           </div>
 
           {/* Comparison Matrix Table */}
-          <div className="rounded-2xl bg-ghost-card border border-ghost-border overflow-hidden shadow-md">
+          <Card padding="none" className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-ghost-border bg-ghost-darkest/70 text-ghost-textMuted uppercase font-semibold">
+                  <tr className="border-b border-ghost-border bg-ghost-bg/70 text-ghost-textMuted uppercase font-semibold">
                     <th className="py-3.5 px-4 w-1/5">Dimension</th>
                     <th className="py-3.5 px-4 w-1/3 text-emerald-400">Evidence FOR Thesis</th>
                     <th className="py-3.5 px-4 w-1/3 text-rose-400">Evidence AGAINST Thesis</th>
@@ -846,7 +845,7 @@ export const Courtroom: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-ghost-border/60">
                   {currentCase.cross_examination.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-ghost-darkest/40 transition-colors">
+                    <tr key={idx} className="hover:bg-ghost-cardHover transition-colors">
                       <td className="py-4 px-4 font-bold text-ghost-textPrimary align-top">
                         {row.dimension}
                       </td>
@@ -877,7 +876,7 @@ export const Courtroom: React.FC = () => {
                 </tbody>
               </table>
             </div>
-          </div>
+          </Card>
 
           <div className="flex justify-between pt-2">
             <button
@@ -901,7 +900,7 @@ export const Courtroom: React.FC = () => {
       {activeTab === 'verdict' && (
         <div className="space-y-6 animate-in fade-in duration-150">
           {/* Verdict Banner */}
-          <div className="p-6 rounded-2xl bg-ghost-card border border-ghost-border space-y-4 shadow-lg">
+          <Card className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="text-xs font-bold text-ghost-textMuted uppercase tracking-wider">
                 Official Courtroom Assessment
@@ -919,13 +918,13 @@ export const Courtroom: React.FC = () => {
               </div>
             </div>
 
-            <p className="text-sm text-slate-200 leading-relaxed bg-ghost-darkest p-4 rounded-xl border border-ghost-border/70">
+            <p className="text-sm text-slate-200 leading-relaxed bg-ghost-bg p-4 rounded-xl border border-ghost-border/70">
               {currentCase.verdict_rationale}
             </p>
-          </div>
+          </Card>
 
           {/* What Would Invalidate This Thesis? */}
-          <div className="p-6 rounded-2xl bg-ghost-card border border-ghost-border space-y-4 shadow-md">
+          <Card className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-ghost-textPrimary flex items-center gap-2">
@@ -942,7 +941,7 @@ export const Courtroom: React.FC = () => {
               {currentCase.invalidation_conditions.map((cond, idx) => (
                 <div
                   key={idx}
-                  className="p-4 rounded-xl bg-ghost-darkest border border-ghost-border/80 space-y-2"
+                  className="p-4 rounded-xl bg-ghost-bg border border-ghost-border/80 space-y-2"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">
@@ -963,7 +962,7 @@ export const Courtroom: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
           <div className="flex justify-between pt-2">
             <button
@@ -986,7 +985,7 @@ export const Courtroom: React.FC = () => {
       {/* PHASE 6: SUMMARY REPORT */}
       {activeTab === 'summary' && (
         <div className="space-y-6 animate-in fade-in duration-150">
-          <div className="p-6 rounded-2xl bg-ghost-card border border-ghost-border space-y-6 shadow-xl">
+          <Card className="space-y-6">
             <div className="flex items-center justify-between border-b border-ghost-border pb-4">
               <div>
                 <span className="text-xs font-bold text-ghost-sand block">
@@ -1027,7 +1026,7 @@ export const Courtroom: React.FC = () => {
             </div>
 
             {/* Invalidation Rules Highlight */}
-            <div className="p-4 rounded-xl bg-ghost-darkest border border-ghost-border space-y-2">
+            <div className="p-4 rounded-xl bg-ghost-bg border border-ghost-border space-y-2">
               <span className="text-xs font-bold text-ghost-textMuted uppercase tracking-wider block">
                 Primary Invalidation Trigger
               </span>
@@ -1037,7 +1036,7 @@ export const Courtroom: React.FC = () => {
             </div>
 
             {/* Verification Metadata */}
-            <div className="p-4 rounded-xl bg-ghost-darkest/60 border border-ghost-border/40 text-xs text-ghost-textMuted space-y-1.5">
+            <div className="p-4 rounded-xl bg-ghost-bg/60 border border-ghost-border/40 text-xs text-ghost-textMuted space-y-1.5">
               <div className="flex justify-between">
                 <span>Inquest Convened:</span>
                 <span className="text-slate-300 font-semibold">{new Date(currentCase.created_at).toLocaleString()}</span>
@@ -1056,7 +1055,7 @@ export const Courtroom: React.FC = () => {
             <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-ghost-border">
               <button
                 onClick={() => window.print()}
-                className="px-4 py-2 rounded-xl bg-ghost-card hover:bg-ghost-border border border-ghost-border text-xs font-semibold text-ghost-textMuted hover:text-ghost-textPrimary transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-ghost-card hover:bg-ghost-cardHover border border-ghost-border text-xs font-semibold text-ghost-textMuted hover:text-ghost-textPrimary transition-colors flex items-center gap-1.5"
               >
                 <FileText className="w-3.5 h-3.5" />
                 <span>Print Case Report</span>
@@ -1070,7 +1069,7 @@ export const Courtroom: React.FC = () => {
                 <span>Challenge Another Thesis</span>
               </button>
             </div>
-          </div>
+          </Card>
         </div>
       )}
 
