@@ -10,7 +10,7 @@
   }
 
   body {
-    @apply bg-slate-950 text-slate-100 antialiased font-sans selection:bg-indigo-500/30 selection:text-indigo-200;
+    @apply bg-ghost-bg text-ghost-textPrimary antialiased font-sans selection:bg-ghost-cyan/20 selection:text-ghost-cyan;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
@@ -21,23 +21,15 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.6);
+    background: #0B0F14;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(51, 65, 85, 0.6);
+    background: #253041;
     border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(71, 85, 105, 0.8);
+    background: #334155;
   }
-}
-
-/* Background grid pattern utility */
-.bg-grid-pattern {
-  background-size: 32px 32px;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 }

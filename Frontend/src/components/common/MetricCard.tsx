@@ -1,4 +1,5 @@
 import React from 'react';
+import { ChevronRight } from 'lucide-react';
 
 interface MetricCardProps {
   label: string;
@@ -10,6 +11,7 @@ interface MetricCardProps {
   badge?: React.ReactNode;
   variant?: 'default' | 'cyan' | 'green' | 'red' | 'amber' | 'purple';
   tooltip?: string;
+  onViewDetails?: () => void;
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({
@@ -22,19 +24,18 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   badge,
   variant = 'default',
   tooltip,
+  onViewDetails,
 }) => {
-  const getBorderColor = () => {
+  const getAccentBorder = () => {
     switch (variant) {
       case 'cyan':
-        return 'border-ghost-cyan/40 hover:border-ghost-cyan';
+        return 'border-ghost-cyan/30 hover:border-ghost-cyan/60';
       case 'green':
-        return 'border-ghost-green/40 hover:border-ghost-green';
+        return 'border-emerald-500/30 hover:border-emerald-500/60';
       case 'red':
-        return 'border-ghost-red/40 hover:border-ghost-red';
+        return 'border-rose-500/30 hover:border-rose-500/60';
       case 'amber':
-        return 'border-ghost-amber/40 hover:border-ghost-amber';
-      case 'purple':
-        return 'border-ghost-purple/40 hover:border-ghost-purple';
+        return 'border-amber-500/30 hover:border-amber-500/60';
       default:
         return 'border-ghost-border hover:border-ghost-borderLight';
     }
@@ -43,34 +44,48 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   return (
     <div
       title={tooltip}
-      className={`relative bg-ghost-card border ${getBorderColor()} rounded-xl p-5 transition-all duration-200 shadow-lg hover:shadow-xl hover:bg-ghost-cardHover group`}
+      className={`relative bg-ghost-card border ${getAccentBorder()} rounded-xl p-5 transition-all duration-200 shadow-sm hover:bg-ghost-cardHover group flex flex-col justify-between`}
     >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium uppercase tracking-wider text-ghost-textMuted font-mono">
-          {label}
-        </span>
-        <div className="flex items-center gap-2">
-          {badge}
-          {icon && <div className="text-ghost-textMuted group-hover:text-ghost-cyan transition-colors">{icon}</div>}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-medium text-ghost-textMuted tracking-normal">
+            {label}
+          </span>
+          <div className="flex items-center gap-2">
+            {badge}
+            {icon && <div className="text-ghost-textDim group-hover:text-ghost-cyan transition-colors">{icon}</div>}
+          </div>
+        </div>
+
+        <div className="flex items-baseline gap-1.5 mt-1">
+          <span className="text-2xl font-semibold font-mono text-ghost-textPrimary tracking-tight">
+            {value}
+          </span>
+          {unit && <span className="text-xs font-mono text-ghost-textMuted">{unit}</span>}
         </div>
       </div>
 
-      <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold font-mono text-ghost-textPrimary tracking-tight">
-          {value}
-        </span>
-        {unit && <span className="text-xs font-mono text-ghost-textMuted">{unit}</span>}
-      </div>
+      {(subValue || change !== undefined || onViewDetails) && (
+        <div className="mt-3 pt-2.5 border-t border-ghost-border/40 flex items-center justify-between text-xs font-sans">
+          <div className="flex items-center gap-2">
+            {change !== undefined && (
+              <span className={`inline-flex items-center font-medium ${change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {change >= 0 ? '+' : ''}
+                {change.toFixed(2)}%
+              </span>
+            )}
+            {subValue && <span className="text-ghost-textMuted truncate max-w-[180px]">{subValue}</span>}
+          </div>
 
-      {(subValue || change !== undefined) && (
-        <div className="mt-2 flex items-center gap-2 text-xs font-mono">
-          {change !== undefined && (
-            <span className={`inline-flex items-center font-semibold ${change >= 0 ? 'text-ghost-green' : 'text-ghost-red'}`}>
-              {change >= 0 ? '▲ +' : '▼ '}
-              {change.toFixed(2)}%
-            </span>
+          {onViewDetails && (
+            <button
+              onClick={onViewDetails}
+              className="inline-flex items-center gap-1 text-xs font-medium text-ghost-cyan hover:underline transition-all"
+            >
+              <span>Details</span>
+              <ChevronRight className="w-3 h-3" />
+            </button>
           )}
-          {subValue && <span className="text-ghost-textMuted truncate">{subValue}</span>}
         </div>
       )}
     </div>

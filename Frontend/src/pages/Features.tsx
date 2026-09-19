@@ -5,7 +5,7 @@ import { MetricCard } from '../components/common/MetricCard';
 import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
 import { AssetSelector } from '../components/common/AssetSelector';
-import { RefreshCw, Layers, Activity, TrendingUp, ShieldAlert } from 'lucide-react';
+import { RefreshCw, Activity, BarChart2, ShieldCheck, ChevronRight } from 'lucide-react';
 
 export const Features: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState<string>('BTC/USDT');
@@ -13,6 +13,7 @@ export const Features: React.FC = () => {
   const [stateResult, setStateResult] = useState<MarketStateResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState<boolean>(false);
 
   const fetchFeatures = useCallback(async () => {
     setIsLoading(true);
@@ -33,25 +34,26 @@ export const Features: React.FC = () => {
 
   const features = stateResult?.features_used || {};
 
+  const rsi = features.rsi_14 !== undefined ? features.rsi_14 : 50;
+  const macd = features.macd_hist !== undefined ? features.macd_hist : 0;
+  const atr = features.atr_14 !== undefined ? features.atr_14 : 0;
+  const bbBandwidth = features.bb_bandwidth !== undefined ? features.bb_bandwidth : 0;
+  const obi = features.order_book_imbalance !== undefined ? features.order_book_imbalance : 0;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-ghost-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-ghost-border">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-mono font-bold tracking-tight text-ghost-textPrimary uppercase">
-              Quantitative Feature Engine
-            </h1>
-            <span className="px-2 py-0.5 rounded text-2xs font-mono bg-sky-500/10 text-sky-400 border border-sky-500/30">
-              ZERO-LOOKAHEAD
-            </span>
-          </div>
-          <p className="text-xs font-mono text-ghost-textMuted mt-0.5">
-            Normalized point-in-time quantitative features strictly calculated on the backend
+          <h1 className="text-2xl font-bold text-ghost-textPrimary tracking-tight">
+            Market Analysis
+          </h1>
+          <p className="text-sm text-ghost-textMuted mt-0.5">
+            Technical indicators and market momentum factors for {selectedSymbol}.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 font-mono text-xs">
+        <div className="flex items-center gap-3">
           <AssetSelector
             selectedSymbol={selectedSymbol}
             onSelectSymbol={(s) => setSelectedSymbol(s)}
@@ -60,7 +62,7 @@ export const Features: React.FC = () => {
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
-            className="px-2.5 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary focus:outline-none focus:border-ghost-cyan text-xs font-mono"
+            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary text-xs font-mono focus:outline-none focus:border-ghost-cyan"
           >
             <option value="15m">15m</option>
             <option value="1h">1h</option>
@@ -71,177 +73,106 @@ export const Features: React.FC = () => {
           <button
             onClick={fetchFeatures}
             disabled={isLoading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-borderLight text-ghost-textPrimary hover:text-ghost-cyan transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-cyan/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-cyan transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-cyan' : ''}`} />
-            <span>Recalculate</span>
+            <span>Update</span>
           </button>
         </div>
       </div>
 
       {error && <ErrorState error={error} onRetry={fetchFeatures} />}
 
-      {/* Feature Groups */}
       {isLoading ? (
-        <LoadingState message="Extracting trailing feature matrix from backend..." />
+        <LoadingState message="Calculating market indicators..." />
       ) : (
         <div className="space-y-6">
-          {/* Section 1: Momentum & Velocity Indicators */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
+          {/* Section 1: Momentum */}
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold text-ghost-textPrimary flex items-center gap-2">
               <Activity className="w-4 h-4 text-ghost-cyan" />
-              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-ghost-textPrimary">
-                1. Momentum & Velocity Oscillators
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <span>Momentum Indicators</span>
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <MetricCard
-                label="RSI (14-PERIOD)"
-                value={features.rsi_14 !== undefined ? features.rsi_14.toFixed(2) : '—'}
-                subValue={
-                  features.rsi_14 !== undefined
-                    ? features.rsi_14 >= 70
-                      ? 'Overbought Zone'
-                      : features.rsi_14 <= 30
-                      ? 'Oversold Zone'
-                      : 'Neutral Momentum'
-                    : undefined
-                }
-                variant={features.rsi_14 >= 70 ? 'red' : features.rsi_14 <= 30 ? 'green' : 'default'}
+                label="Relative Strength Index (RSI)"
+                value={rsi.toFixed(1)}
+                subValue={rsi > 70 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral Momentum'}
+                variant={rsi > 70 ? 'red' : rsi < 30 ? 'green' : 'default'}
               />
+
               <MetricCard
-                label="MACD HISTOGRAM"
-                value={features.macd_hist !== undefined ? features.macd_hist.toFixed(4) : '—'}
-                subValue={features.macd !== undefined ? `MACD: ${features.macd.toFixed(3)} | Signal: ${features.macd_signal?.toFixed(3)}` : undefined}
-                variant={features.macd_hist >= 0 ? 'green' : 'red'}
+                label="MACD Histogram"
+                value={macd.toFixed(2)}
+                subValue={macd > 0 ? 'Bullish Crossover' : 'Bearish Divergence'}
+                variant={macd > 0 ? 'green' : 'red'}
               />
+
               <MetricCard
-                label="MOMENTUM (10-PERIOD)"
-                value={features.momentum_10 !== undefined ? `${(features.momentum_10 * 100).toFixed(2)}%` : '—'}
-                subValue="Trailing 10-candle velocity rate"
-                variant="default"
-              />
-              <MetricCard
-                label="TREND STRENGTH"
-                value={features.trend_strength !== undefined ? `${(features.trend_strength * 100).toFixed(2)}%` : '—'}
-                subValue="(SMA_fast - SMA_slow) / SMA_slow"
-                variant="cyan"
+                label="Order Book Imbalance"
+                value={`${(obi * 100).toFixed(1)}%`}
+                subValue={obi > 0 ? 'Net Bid Pressure' : 'Net Ask Pressure'}
+                variant={obi > 0 ? 'green' : 'red'}
               />
             </div>
           </div>
 
-          {/* Section 2: Volatility & Price Dispersion */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-4 h-4 text-ghost-amber" />
-              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-ghost-textPrimary">
-                2. Volatility & Dispersion Regimes
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Section 2: Volatility & Dispersion */}
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold text-ghost-textPrimary flex items-center gap-2">
+              <BarChart2 className="w-4 h-4 text-purple-400" />
+              <span>Volatility & Volatility Bands</span>
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <MetricCard
-                label="AVERAGE TRUE RANGE (14)"
-                value={features.atr_14 !== undefined ? `$${features.atr_14.toFixed(2)}` : '—'}
-                subValue="Trailing average candle range"
-                variant="default"
+                label="Average True Range (ATR 14)"
+                value={`$${atr.toFixed(2)}`}
+                subValue="14-period price dispersion"
               />
+
               <MetricCard
-                label="BOLLINGER BANDWIDTH"
-                value={features.bollinger_bandwidth !== undefined ? `${(features.bollinger_bandwidth * 100).toFixed(2)}%` : '—'}
-                subValue="Band expansion / compression"
-                variant="default"
-              />
-              <MetricCard
-                label="REALIZED VOLATILITY (20)"
-                value={features.volatility_20 !== undefined ? `${(features.volatility_20 * 100).toFixed(2)}%` : '—'}
-                subValue="Rolling standard deviation"
+                label="Bollinger Bandwidth"
+                value={`${(bbBandwidth * 100).toFixed(2)}%`}
+                subValue={bbBandwidth > 0.05 ? 'High Volatility Squeeze' : 'Normal Volatility'}
                 variant="amber"
               />
-              <MetricCard
-                label="LOGARITHMIC RETURN"
-                value={features.log_returns !== undefined ? `${(features.log_returns * 100).toFixed(4)}%` : '—'}
-                subValue={`Arithmetic: ${(features.returns ? features.returns * 100 : 0).toFixed(4)}%`}
-                variant="default"
-              />
-            </div>
-          </div>
 
-          {/* Section 3: Trend & Capital Preservation */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <ShieldAlert className="w-4 h-4 text-ghost-red" />
-              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-ghost-textPrimary">
-                3. Trend Envelope & Capital Preservation
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <MetricCard
-                label="SMA (20-PERIOD)"
-                value={features.sma_20 !== undefined ? `$${features.sma_20.toFixed(2)}` : '—'}
-                subValue="Short-term moving average"
-                variant="default"
-              />
-              <MetricCard
-                label="EMA (20-PERIOD)"
-                value={features.ema_20 !== undefined ? `$${features.ema_20.toFixed(2)}` : '—'}
-                subValue="Exponential weighted mean"
-                variant="default"
-              />
-              <MetricCard
-                label="CURRENT DRAWDOWN"
-                value={features.drawdown !== undefined ? `${(features.drawdown * 100).toFixed(2)}%` : '—'}
-                subValue="Decline from recent peak"
-                variant={features.drawdown < -0.10 ? 'red' : 'default'}
-              />
-              <MetricCard
-                label="MAX CUMULATIVE DRAWDOWN"
-                value={features.max_drawdown !== undefined ? `${(features.max_drawdown * 100).toFixed(2)}%` : '—'}
-                subValue="Worst sample historical trough"
-                variant="red"
-              />
-            </div>
-          </div>
-
-          {/* Section 4: Microstructure & Correlation */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Layers className="w-4 h-4 text-purple-400" />
-              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-ghost-textPrimary">
-                4. Microstructure & Cross-Asset Correlation
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <MetricCard
-                label="ORDERBOOK IMBALANCE (OBI)"
-                value={features.orderbook_imbalance !== undefined ? features.orderbook_imbalance.toFixed(4) : '—'}
-                subValue={
-                  features.orderbook_imbalance !== undefined
-                    ? features.orderbook_imbalance > 0
-                      ? 'Bid Pressure Dominant'
-                      : 'Ask Pressure Dominant'
-                    : undefined
-                }
-                variant={features.orderbook_imbalance > 0 ? 'green' : 'red'}
-              />
-              <MetricCard
-                label="ROLLING CORRELATION"
-                value={features.rolling_correlation !== undefined ? features.rolling_correlation.toFixed(3) : '—'}
-                subValue="Trailing cross-correlation factor"
-                variant="default"
-              />
-              <MetricCard
-                label="FEATURE SPEC VERSION"
-                value="v1.0"
-                subValue="Strictly zero-lookahead"
+                label="Market Regime Outlook"
+                value={stateResult?.state.replace('_', ' ') || 'Neutral'}
+                subValue={stateResult ? `Confidence: ${Math.round(stateResult.confidence * 100)}%` : undefined}
                 variant="cyan"
               />
-              <MetricCard
-                label="MODEL SPECIFICATION"
-                value="GHOST-ENG"
-                subValue={`Candles consumed: ${stateResult?.features_used ? 100 : 0}`}
-                variant="default"
-              />
             </div>
+          </div>
+
+          {/* Progressive Disclosure: Technical Formulas */}
+          <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-ghost-cyan" />
+                <h3 className="text-sm font-semibold text-ghost-textPrimary">Technical Specification</h3>
+              </div>
+
+              <button
+                onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
+                className="text-xs text-ghost-cyan hover:underline flex items-center gap-1 font-medium"
+              >
+                <span>{showTechnicalDetails ? 'Hide calculation details' : 'View raw feature matrix'}</span>
+                <ChevronRight className={`w-3.5 h-3.5 transform transition-transform ${showTechnicalDetails ? 'rotate-90' : ''}`} />
+              </button>
+            </div>
+
+            {showTechnicalDetails && (
+              <div className="p-4 bg-ghost-darkest rounded-lg border border-ghost-border/80 font-mono text-xs text-ghost-textMuted space-y-3">
+                <p className="text-ghost-textPrimary font-semibold">Raw Technical Feature Dictionary:</p>
+                <pre className="text-2xs text-ghost-cyan leading-relaxed overflow-x-auto">
+                  {JSON.stringify(features, null, 2)}
+                </pre>
+              </div>
+            )}
           </div>
         </div>
       )}

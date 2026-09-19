@@ -54,7 +54,6 @@ export const ApiConsole: React.FC = () => {
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
   const [responseLatency, setResponseLatency] = useState<number | null>(null);
   const [responseData, setResponseData] = useState<string | null>(null);
-  const [responseHeaders, setResponseHeaders] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -75,7 +74,6 @@ export const ApiConsole: React.FC = () => {
     setResponseData(null);
     setResponseStatus(null);
     setResponseLatency(null);
-    setResponseHeaders({});
 
     const startTime = performance.now();
 
@@ -95,7 +93,7 @@ export const ApiConsole: React.FC = () => {
       const cleanPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
       const fullUrl = `${baseUrl}${cleanPath}`;
       
-      const token = localStorage.getItem('ghost_token');
+      const token = localStorage.getItem('ghost_access_token');
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
@@ -112,12 +110,6 @@ export const ApiConsole: React.FC = () => {
       const endTime = performance.now();
       setResponseLatency(Math.round(endTime - startTime));
       setResponseStatus(res.status);
-
-      const headerObj: Record<string, string> = {};
-      res.headers.forEach((val, key) => {
-        headerObj[key] = val;
-      });
-      setResponseHeaders(headerObj);
 
       const text = await res.text();
       try {
@@ -146,39 +138,39 @@ export const ApiConsole: React.FC = () => {
   const categories = Array.from(new Set(PRESETS.map((p) => p.category)));
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto font-sans text-xs">
       {/* Header */}
       <div>
-        <div className="flex items-center space-x-2 text-indigo-400 text-sm font-semibold tracking-wider uppercase mb-1">
+        <div className="flex items-center gap-2 text-ghost-cyan text-xs font-medium uppercase tracking-wider mb-1">
           <Terminal className="w-4 h-4" />
-          <span>Interactive Testing Tool</span>
+          <span>Developer Tools</span>
         </div>
-        <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-          Developer API Console
-          <span className="text-xs px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded font-mono font-normal">
+        <h1 className="text-2xl font-bold text-ghost-textPrimary tracking-tight flex items-center gap-3">
+          API Console
+          <span className="text-xs px-2.5 py-0.5 bg-ghost-card border border-ghost-border text-ghost-textMuted rounded font-mono font-normal">
             Direct Backend Harness
           </span>
         </h1>
-        <p className="text-sm text-slate-400 mt-1">
-          Directly execute queries against GHOST backend endpoints. Inspect live response latency, HTTP status codes, security headers, and JSON payloads.
+        <p className="text-sm text-ghost-textMuted mt-1">
+          Directly query GHOST backend endpoints. Inspect live response latency, HTTP status codes, security headers, and JSON payloads.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Presets Sidebar */}
-        <div className="lg:col-span-1 bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <h2 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+        <div className="lg:col-span-1 bg-ghost-card border border-ghost-border rounded-xl p-4 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-ghost-border">
+            <h2 className="text-sm font-semibold text-ghost-textPrimary flex items-center gap-2">
               <Zap className="w-4 h-4 text-amber-400" />
               API Presets
             </h2>
-            <span className="text-xs font-mono text-slate-500">{PRESETS.length} routes</span>
+            <span className="text-xs font-mono text-ghost-textDim">{PRESETS.length} routes</span>
           </div>
 
           <div className="space-y-4 max-h-[680px] overflow-y-auto pr-1">
             {categories.map((category) => (
               <div key={category} className="space-y-1.5">
-                <div className="text-[11px] font-semibold text-slate-400 tracking-wider uppercase px-2">
+                <div className="text-[11px] font-semibold text-ghost-textDim tracking-wider uppercase px-2">
                   {category}
                 </div>
                 <div className="space-y-1">
@@ -188,8 +180,8 @@ export const ApiConsole: React.FC = () => {
                       onClick={() => applyPreset(preset)}
                       className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all flex items-center justify-between group ${
                         endpoint === preset.path && method === preset.method
-                          ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 font-medium'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                          ? 'bg-ghost-cyan/10 text-ghost-cyan border border-ghost-cyan/30 font-semibold'
+                          : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-border/40'
                       }`}
                     >
                       <span className="truncate mr-2">{preset.name}</span>
@@ -213,12 +205,12 @@ export const ApiConsole: React.FC = () => {
         {/* Request / Response Panel */}
         <div className="lg:col-span-3 space-y-4">
           {/* Query Bar */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-3">
+          <div className="bg-ghost-card border border-ghost-border rounded-xl p-4 space-y-3">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <select
                 value={method}
                 onChange={(e) => setMethod(e.target.value as any)}
-                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono font-bold text-slate-200 focus:outline-none focus:border-indigo-500"
+                className="bg-ghost-darkest border border-ghost-border rounded-lg px-3 py-2 text-xs font-mono font-bold text-ghost-textPrimary focus:outline-none focus:border-ghost-cyan"
               >
                 <option value="GET">GET</option>
                 <option value="POST">POST</option>
@@ -232,14 +224,14 @@ export const ApiConsole: React.FC = () => {
                   value={endpoint}
                   onChange={(e) => setEndpoint(e.target.value)}
                   placeholder="/api/v1/..."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm font-mono text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-ghost-darkest border border-ghost-border rounded-lg px-3 py-2 text-xs font-mono text-ghost-textPrimary placeholder:text-ghost-textDim focus:outline-none focus:border-ghost-cyan"
                 />
               </div>
 
               <button
                 onClick={handleSend}
                 disabled={loading || !endpoint}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2"
+                className="px-5 py-2 bg-ghost-cyan hover:bg-cyan-400 disabled:opacity-50 text-slate-950 font-semibold rounded-lg text-xs transition-all shadow-sm flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -253,13 +245,13 @@ export const ApiConsole: React.FC = () => {
             {/* Request Body Editor for POST/PUT */}
             {['POST', 'PUT'].includes(method) && (
               <div className="space-y-1 pt-2">
-                <label className="text-xs font-semibold text-slate-400">JSON Request Body:</label>
+                <label className="text-xs font-semibold text-ghost-textMuted">JSON Request Body:</label>
                 <textarea
                   value={requestBody}
                   onChange={(e) => setRequestBody(e.target.value)}
                   rows={6}
                   placeholder='{"key": "value"}'
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-ghost-darkest border border-ghost-border rounded-lg p-3 text-xs font-mono text-ghost-textPrimary focus:outline-none focus:border-ghost-cyan"
                 />
               </div>
             )}
@@ -267,11 +259,11 @@ export const ApiConsole: React.FC = () => {
 
           {/* Response Metadata Bar */}
           {(responseStatus !== null || errorMsg) && (
-            <div className="bg-slate-900/40 border border-slate-800 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+            <div className="bg-ghost-card border border-ghost-border rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
               <div className="flex items-center gap-4">
                 {responseStatus !== null && (
                   <div className="flex items-center gap-1.5">
-                    <span className="text-slate-400">Status:</span>
+                    <span className="text-ghost-textMuted">Status:</span>
                     <span
                       className={`px-2 py-0.5 rounded font-bold ${
                         responseStatus >= 200 && responseStatus < 300
@@ -286,15 +278,9 @@ export const ApiConsole: React.FC = () => {
                   </div>
                 )}
                 {responseLatency !== null && (
-                  <div className="flex items-center gap-1.5 text-slate-300">
-                    <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                  <div className="flex items-center gap-1.5 text-ghost-textPrimary">
+                    <Clock className="w-3.5 h-3.5 text-ghost-cyan" />
                     <span>{responseLatency} ms</span>
-                  </div>
-                )}
-                {responseHeaders['x-request-id'] && (
-                  <div className="flex items-center gap-1.5 text-slate-400 truncate max-w-xs">
-                    <span>Req ID:</span>
-                    <span className="text-slate-300">{responseHeaders['x-request-id']}</span>
                   </div>
                 )}
               </div>
@@ -302,12 +288,12 @@ export const ApiConsole: React.FC = () => {
               {responseData && (
                 <button
                   onClick={handleCopy}
-                  className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 transition-colors"
+                  className="flex items-center gap-1.5 text-ghost-textMuted hover:text-ghost-textPrimary transition-colors"
                 >
                   {copied ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-400">Copied</span>
+                      <span className="text-emerald-400 font-semibold">Copied</span>
                     </>
                   ) : (
                     <>
@@ -322,33 +308,33 @@ export const ApiConsole: React.FC = () => {
 
           {/* Error Banner */}
           {errorMsg && (
-            <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 flex items-start gap-3 text-rose-300 text-sm">
-              <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+            <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 flex items-start gap-3 text-rose-300 text-xs">
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold">Request Execution Error</p>
-                <p className="text-xs text-rose-400/90 mt-1 font-mono">{errorMsg}</p>
+                <p className="font-semibold">Request Error</p>
+                <p className="text-rose-400/90 mt-1 font-mono">{errorMsg}</p>
               </div>
             </div>
           )}
 
           {/* Response Payload Viewer */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
-            <div className="px-4 py-2.5 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between">
-              <span className="text-xs font-mono text-slate-400 flex items-center gap-2">
-                <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="bg-ghost-card border border-ghost-border rounded-xl overflow-hidden">
+            <div className="px-4 py-2.5 bg-ghost-darkest border-b border-ghost-border flex items-center justify-between">
+              <span className="text-xs font-mono text-ghost-textMuted flex items-center gap-2">
+                <ShieldCheck className="w-3.5 h-3.5 text-ghost-cyan" />
                 Response Payload
               </span>
-              <span className="text-[11px] text-slate-500 font-mono">
+              <span className="text-2xs text-ghost-textDim font-mono">
                 {responseData ? `${(new Blob([responseData]).size / 1024).toFixed(2)} KB` : 'Idle'}
               </span>
             </div>
-            <div className="p-4 bg-slate-950 min-h-[380px] max-h-[580px] overflow-auto">
+            <div className="p-4 bg-ghost-darkest min-h-[380px] max-h-[580px] overflow-auto font-mono text-xs">
               {responseData ? (
-                <pre className="text-xs font-mono text-slate-300 whitespace-pre leading-relaxed">
+                <pre className="text-ghost-textPrimary whitespace-pre leading-relaxed">
                   {responseData}
                 </pre>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-slate-600 space-y-2 py-24">
+                <div className="h-full flex flex-col items-center justify-center text-ghost-textDim space-y-2 py-24">
                   <Terminal className="w-8 h-8 stroke-1" />
                   <p className="text-xs font-mono">Select a preset or enter an endpoint and click Send Request</p>
                 </div>

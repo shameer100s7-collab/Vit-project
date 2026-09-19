@@ -47,13 +47,13 @@ export const AssetSelector: React.FC<AssetSelectorProps> = ({
           <div className="absolute left-0 mt-1.5 w-56 rounded-xl bg-ghost-card border border-ghost-border shadow-2xl z-30 py-2 font-mono text-xs overflow-hidden">
             <div className="px-3 pb-2 border-b border-ghost-border/60">
               <form onSubmit={handleCustomSubmit} className="flex items-center gap-1.5 bg-ghost-darkest px-2 py-1 rounded border border-ghost-border">
-                <Search className="w-3 h-3 text-ghost-textMuted" />
+                <Search className="w-3.5 h-3.5 text-ghost-textMuted" />
                 <input
                   type="text"
                   placeholder="Custom symbol (e.g. BTC)..."
                   value={customInput}
                   onChange={(e) => setCustomInput(e.target.value)}
-                  className="w-full bg-transparent border-none text-2xs text-ghost-textPrimary placeholder:text-ghost-textMuted focus:outline-none"
+                  className="w-full bg-transparent border-none text-xs text-ghost-textPrimary placeholder:text-ghost-textDim focus:outline-none"
                 />
               </form>
             </div>
@@ -72,7 +72,7 @@ export const AssetSelector: React.FC<AssetSelectorProps> = ({
                   }`}
                 >
                   <span>{sym}</span>
-                  {sym === selectedSymbol && <span className="text-2xs text-ghost-cyan">ACTIVE</span>}
+                  {sym === selectedSymbol && <span className="text-[10px] text-ghost-cyan font-bold">ACTIVE</span>}
                 </button>
               ))}
             </div>

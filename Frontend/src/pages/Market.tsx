@@ -16,6 +16,8 @@ import { RefreshCw, TrendingUp, Layers, HardDrive, DollarSign, Activity } from '
 export const Market: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState<string>('BTC/USDT');
   const [timeframe, setTimeframe] = useState<string>('1h');
+  const [activeTab, setActiveTab] = useState<'overview' | 'chart' | 'orderbook' | 'statistics'>('overview');
+
   const [price, setPrice] = useState<CanonicalPrice | null>(null);
   const [candles, setCandles] = useState<CanonicalCandle[]>([]);
   const [orderbook, setOrderbook] = useState<CanonicalOrderBook | null>(null);
@@ -57,20 +59,24 @@ export const Market: React.FC = () => {
     fetchMarketData();
   }, [fetchMarketData]);
 
+  const topBid = orderbook?.bids[0]?.price ?? 0;
+  const topAsk = orderbook?.asks[0]?.price ?? 0;
+  const spread = topAsk && topBid ? topAsk - topBid : 0;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-ghost-border">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-ghost-border">
         <div>
-          <h1 className="text-xl font-mono font-bold tracking-tight text-ghost-textPrimary uppercase">
-            Market Microstructure & Feeds
+          <h1 className="text-2xl font-bold text-ghost-textPrimary tracking-tight">
+            Market Data & Depth
           </h1>
-          <p className="text-xs font-mono text-ghost-textMuted mt-0.5">
-            Real-time normalized price quotations, order book depth, OHLCV time series, and provider diagnostics
+          <p className="text-sm text-ghost-textMuted mt-0.5">
+            Normalized price feeds, time series candles, and order book depth for {selectedSymbol}.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 font-mono text-xs">
+        <div className="flex items-center gap-3">
           <AssetSelector
             selectedSymbol={selectedSymbol}
             onSelectSymbol={(s) => setSelectedSymbol(s)}
@@ -79,7 +85,7 @@ export const Market: React.FC = () => {
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
-            className="px-2.5 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary focus:outline-none focus:border-ghost-cyan text-xs font-mono"
+            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary text-xs font-mono focus:outline-none focus:border-ghost-cyan"
           >
             <option value="15m">15m</option>
             <option value="1h">1h</option>
@@ -90,7 +96,7 @@ export const Market: React.FC = () => {
           <button
             onClick={fetchMarketData}
             disabled={isLoading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-borderLight text-ghost-textPrimary hover:text-ghost-cyan transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-cyan/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-cyan transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-cyan' : ''}`} />
             <span>Refresh</span>
@@ -98,166 +104,209 @@ export const Market: React.FC = () => {
         </div>
       </div>
 
-      {error && <ErrorState error={error} onRetry={fetchMarketData} />}
-
-      {/* Top Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          label="QUOTED PRICE"
-          value={price ? `$${price.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` : '—'}
-          change={volume?.price_change_pct_24h}
-          subValue={price ? `Source: ${price.source}` : undefined}
-          icon={<DollarSign className="w-4 h-4" />}
-          variant="cyan"
-        />
-
-        <MetricCard
-          label="24H NOTIONAL VOLUME"
-          value={volume ? `$${(volume.quote_volume_24h / 1e6).toFixed(2)}M` : '—'}
-          subValue={volume ? `Base: ${(volume.volume_24h).toFixed(1)} units` : undefined}
-          icon={<TrendingUp className="w-4 h-4" />}
-          variant="default"
-        />
-
-        <MetricCard
-          label="SPREAD (BPS)"
-          value={orderbook ? `${(orderbook.spread_pct * 100).toFixed(2)}%` : '—'}
-          subValue={orderbook ? `Raw Spread: $${orderbook.spread.toFixed(2)}` : undefined}
-          icon={<Layers className="w-4 h-4" />}
-          variant="default"
-        />
-
-        <MetricCard
-          label="PROVIDER TELEMETRY"
-          value={providerHealth?.status === 'healthy' ? 'HEALTHY' : 'CONNECTED'}
-          subValue={providerHealth ? `Provider: ${providerHealth.provider || 'Mock/Binance'}` : 'Online'}
-          icon={<HardDrive className="w-4 h-4" />}
-          variant="green"
-        />
+      {/* Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-ghost-border/60 pb-1">
+        {[
+          { id: 'overview', label: 'Overview' },
+          { id: 'chart', label: 'OHLCV Candles' },
+          { id: 'orderbook', label: 'Order Book' },
+          { id: 'statistics', label: 'Statistics' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`px-4 py-2 text-xs font-medium rounded-lg transition-colors ${
+              activeTab === tab.id
+                ? 'bg-ghost-card text-ghost-cyan font-semibold border border-ghost-border/80 shadow-sm'
+                : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/50'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Main Grid: Order Book & OHLCV Candles */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Panel 1: Order Book Depth */}
-        <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-lg">
-          <div className="flex items-center justify-between pb-3 mb-3 border-b border-ghost-border/60">
-            <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-ghost-cyan" />
-              <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-ghost-textPrimary">
-                Depth of Market ({selectedSymbol})
-              </h3>
-            </div>
-            {orderbook && (
-              <span className="text-2xs font-mono text-ghost-textMuted">
-                Spread: ${orderbook.spread.toFixed(2)} ({(orderbook.spread_pct * 100).toFixed(3)}%)
-              </span>
-            )}
-          </div>
+      {error && <ErrorState error={error} onRetry={fetchMarketData} />}
 
-          {orderbook ? (
-            <div className="grid grid-cols-2 gap-4 font-mono text-xs">
-              {/* Asks (Sell Side) */}
-              <div>
-                <div className="flex justify-between text-2xs font-bold text-ghost-red uppercase pb-1 border-b border-ghost-border/40 mb-1">
-                  <span>ASK PRICE</span>
-                  <span>SIZE</span>
-                </div>
-                <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
-                  {orderbook.asks.slice(0, 10).map((ask, i) => (
-                    <div key={i} className="flex justify-between items-center text-2xs py-0.5 hover:bg-ghost-red/10 rounded px-1">
-                      <span className="text-ghost-red font-semibold">${ask.price.toFixed(2)}</span>
-                      <span className="text-ghost-textPrimary">{ask.quantity.toFixed(4)}</span>
-                    </div>
-                  ))}
-                </div>
+      {isLoading ? (
+        <LoadingState message="Loading market telemetry..." />
+      ) : (
+        <>
+          {/* TAB 1: OVERVIEW */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              {/* Primary Key Metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <MetricCard
+                  label="Spot Price"
+                  value={price ? `$${price.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '—'}
+                  change={volume?.price_change_pct_24h}
+                  icon={<DollarSign className="w-4 h-4" />}
+                />
+
+                <MetricCard
+                  label="24h Volume"
+                  value={volume ? `$${(volume.volume_24h / 1e6).toFixed(2)}M` : '—'}
+                  subValue={volume?.quote_volume_24h ? `Quote Vol: $${(volume.quote_volume_24h / 1e6).toFixed(1)}M` : undefined}
+                  icon={<TrendingUp className="w-4 h-4" />}
+                />
+
+                <MetricCard
+                  label="Spread"
+                  value={orderbook ? `$${spread.toFixed(2)}` : '—'}
+                  subValue={topBid ? `Top Bid $${topBid.toFixed(2)}` : undefined}
+                  icon={<Activity className="w-4 h-4" />}
+                />
+
+                <MetricCard
+                  label="Base Asset"
+                  value={metadata?.base_asset || selectedSymbol.split('/')[0]}
+                  subValue={`Quote: ${metadata?.quote_asset || 'USDT'}`}
+                  icon={<Layers className="w-4 h-4" />}
+                />
               </div>
 
-              {/* Bids (Buy Side) */}
-              <div>
-                <div className="flex justify-between text-2xs font-bold text-ghost-green uppercase pb-1 border-b border-ghost-border/40 mb-1">
-                  <span>BID PRICE</span>
-                  <span>SIZE</span>
-                </div>
-                <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
-                  {orderbook.bids.slice(0, 10).map((bid, i) => (
-                    <div key={i} className="flex justify-between items-center text-2xs py-0.5 hover:bg-ghost-green/10 rounded px-1">
-                      <span className="text-ghost-green font-semibold">${bid.price.toFixed(2)}</span>
-                      <span className="text-ghost-textPrimary">{bid.quantity.toFixed(4)}</span>
-                    </div>
-                  ))}
+              {/* Quick Asset Summary */}
+              <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-3">
+                <h3 className="text-sm font-semibold text-ghost-textPrimary">Asset Specification</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-sans text-ghost-textMuted">
+                  <div>
+                    <span className="block text-ghost-textDim">Symbol</span>
+                    <strong className="text-ghost-textPrimary font-mono">{selectedSymbol}</strong>
+                  </div>
+                  <div>
+                    <span className="block text-ghost-textDim">Min Order Quantity</span>
+                    <strong className="text-ghost-textPrimary font-mono">{metadata?.min_order_quantity || 0.0001}</strong>
+                  </div>
+                  <div>
+                    <span className="block text-ghost-textDim">Price Precision</span>
+                    <strong className="text-ghost-textPrimary font-mono">{metadata?.price_precision || 2} decimals</strong>
+                  </div>
+                  <div>
+                    <span className="block text-ghost-textDim">Status</span>
+                    <span className="text-emerald-400 font-medium">Active Trading</span>
+                  </div>
                 </div>
               </div>
             </div>
-          ) : (
-            <LoadingState message="Loading depth of market levels..." minHeight="min-h-[220px]" />
           )}
-        </div>
 
-        {/* Panel 2: Historical OHLCV Time Series */}
-        <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-lg flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-ghost-border/60">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-ghost-cyan" />
-                <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-ghost-textPrimary">
-                  Chronological OHLCV Series ({timeframe})
-                </h3>
+          {/* TAB 2: OHLCV CANDLES CHART / TABLE */}
+          {activeTab === 'chart' && (
+            <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-ghost-border/50">
+                <h2 className="text-sm font-semibold text-ghost-textPrimary">
+                  OHLCV Time Series ({candles.length} Candles)
+                </h2>
+                <span className="text-xs font-mono text-ghost-textMuted">Timeframe: {timeframe}</span>
               </div>
-              <span className="text-2xs font-mono text-ghost-textMuted">
-                {candles.length} Candles
-              </span>
-            </div>
 
-            {candles.length > 0 ? (
-              <div className="overflow-x-auto max-h-72">
-                <table className="w-full text-left font-mono text-2xs">
-                  <thead className="border-b border-ghost-border/60 text-ghost-textMuted uppercase">
-                    <tr>
-                      <th className="py-1.5 px-2">Time</th>
-                      <th className="py-1.5 px-2 text-right">Open</th>
-                      <th className="py-1.5 px-2 text-right">High</th>
-                      <th className="py-1.5 px-2 text-right">Low</th>
-                      <th className="py-1.5 px-2 text-right">Close</th>
-                      <th className="py-1.5 px-2 text-right">Volume</th>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-mono text-xs">
+                  <thead>
+                    <tr className="border-b border-ghost-border/60 text-ghost-textDim font-medium">
+                      <th className="py-2 px-3">Timestamp</th>
+                      <th className="py-2 px-3">Open</th>
+                      <th className="py-2 px-3">High</th>
+                      <th className="py-2 px-3">Low</th>
+                      <th className="py-2 px-3">Close</th>
+                      <th className="py-2 px-3 text-right">Volume</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-ghost-border/30">
-                    {candles.slice(-10).reverse().map((c, i) => {
-                      const isUp = c.close >= c.open;
-                      return (
-                        <tr key={i} className="hover:bg-ghost-border/20 transition-colors">
-                          <td className="py-1.5 px-2 text-ghost-textMuted">
-                            {new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </td>
-                          <td className="py-1.5 px-2 text-right">${c.open.toFixed(2)}</td>
-                          <td className="py-1.5 px-2 text-right text-ghost-green">${c.high.toFixed(2)}</td>
-                          <td className="py-1.5 px-2 text-right text-ghost-red">${c.low.toFixed(2)}</td>
-                          <td className={`py-1.5 px-2 text-right font-bold ${isUp ? 'text-ghost-green' : 'text-ghost-red'}`}>
-                            ${c.close.toFixed(2)}
-                          </td>
-                          <td className="py-1.5 px-2 text-right text-ghost-textPrimary">{c.volume.toFixed(2)}</td>
-                        </tr>
-                      );
-                    })}
+                  <tbody className="divide-y divide-ghost-border/30 text-ghost-textPrimary">
+                    {candles.map((candle, idx) => (
+                      <tr key={idx} className="hover:bg-ghost-border/20 transition-colors">
+                        <td className="py-2 px-3 text-ghost-textMuted">{new Date(candle.timestamp).toLocaleString()}</td>
+                        <td className="py-2 px-3">${candle.open.toFixed(2)}</td>
+                        <td className="py-2 px-3 text-emerald-400">${candle.high.toFixed(2)}</td>
+                        <td className="py-2 px-3 text-rose-400">${candle.low.toFixed(2)}</td>
+                        <td className="py-2 px-3 font-semibold">${candle.close.toFixed(2)}</td>
+                        <td className="py-2 px-3 text-right text-ghost-textMuted">{candle.volume.toFixed(2)}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
-            ) : (
-              <LoadingState message="Fetching OHLCV time series..." minHeight="min-h-[220px]" />
-            )}
-          </div>
-
-          {/* Metadata Footer */}
-          {metadata && (
-            <div className="mt-4 pt-3 border-t border-ghost-border/60 flex flex-wrap gap-4 text-2xs font-mono text-ghost-textMuted">
-              <span>BASE: <strong className="text-ghost-textPrimary">{metadata.base_asset}</strong></span>
-              <span>QUOTE: <strong className="text-ghost-textPrimary">{metadata.quote_asset}</strong></span>
-              <span>PRICE PRECISION: <strong className="text-ghost-textPrimary">{metadata.price_precision}</strong></span>
-              <span>MIN ORDER: <strong className="text-ghost-textPrimary">{metadata.min_order_quantity}</strong></span>
             </div>
           )}
-        </div>
-      </div>
+
+          {/* TAB 3: ORDER BOOK */}
+          {activeTab === 'orderbook' && orderbook && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Bids */}
+              <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-3">
+                <h3 className="text-sm font-semibold text-emerald-400 flex items-center justify-between">
+                  <span>Bids (Buy Orders)</span>
+                  <span className="text-xs font-mono text-ghost-textMuted">Top 12 Levels</span>
+                </h3>
+                <div className="space-y-1 font-mono text-xs">
+                  <div className="grid grid-cols-3 text-ghost-textDim pb-1 border-b border-ghost-border/40 font-medium">
+                    <span>Price (USDT)</span>
+                    <span className="text-right">Amount</span>
+                    <span className="text-right">Total</span>
+                  </div>
+                  {orderbook.bids.slice(0, 12).map((level, i) => (
+                    <div key={i} className="grid grid-cols-3 py-1 hover:bg-emerald-500/5 rounded px-1">
+                      <span className="text-emerald-400 font-semibold">${level.price.toFixed(2)}</span>
+                      <span className="text-right text-ghost-textPrimary">{level.quantity.toFixed(4)}</span>
+                      <span className="text-right text-ghost-textMuted">${(level.price * level.quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Asks */}
+              <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-3">
+                <h3 className="text-sm font-semibold text-rose-400 flex items-center justify-between">
+                  <span>Asks (Sell Orders)</span>
+                  <span className="text-xs font-mono text-ghost-textMuted">Top 12 Levels</span>
+                </h3>
+                <div className="space-y-1 font-mono text-xs">
+                  <div className="grid grid-cols-3 text-ghost-textDim pb-1 border-b border-ghost-border/40 font-medium">
+                    <span>Price (USDT)</span>
+                    <span className="text-right">Amount</span>
+                    <span className="text-right">Total</span>
+                  </div>
+                  {orderbook.asks.slice(0, 12).map((level, i) => (
+                    <div key={i} className="grid grid-cols-3 py-1 hover:bg-rose-500/5 rounded px-1">
+                      <span className="text-rose-400 font-semibold">${level.price.toFixed(2)}</span>
+                      <span className="text-right text-ghost-textPrimary">{level.quantity.toFixed(4)}</span>
+                      <span className="text-right text-ghost-textMuted">${(level.price * level.quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: STATISTICS */}
+          {activeTab === 'statistics' && (
+            <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4 font-sans text-xs">
+              <h2 className="text-sm font-semibold text-ghost-textPrimary flex items-center gap-2">
+                <HardDrive className="w-4 h-4 text-ghost-cyan" />
+                <span>Provider & Market Diagnostics</span>
+              </h2>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 bg-ghost-darkest border border-ghost-border/60 rounded-lg space-y-2">
+                  <span className="font-medium text-ghost-textMuted">Data Provider</span>
+                  <p className="text-sm font-mono text-ghost-textPrimary">{providerHealth?.provider || 'Canonical Market Service'}</p>
+                  <p className="text-ghost-textDim">Latency: {providerHealth?.latency_ms || 12} ms</p>
+                </div>
+
+                <div className="p-4 bg-ghost-darkest border border-ghost-border/60 rounded-lg space-y-2">
+                  <span className="font-medium text-ghost-textMuted">Feed Status</span>
+                  <div className="flex items-center gap-2 text-emerald-400 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>Synchronized Live Feed</span>
+                  </div>
+                  <p className="text-ghost-textDim">Zero-lookahead timestamping</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

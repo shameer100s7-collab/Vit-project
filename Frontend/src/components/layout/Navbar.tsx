@@ -8,39 +8,33 @@ export const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 w-full h-14 bg-ghost-darkest/95 backdrop-blur border-b border-ghost-border flex items-center justify-between px-4 lg:px-6">
+    <header className="sticky top-0 z-40 w-full h-14 bg-ghost-darkest/90 backdrop-blur-md border-b border-ghost-border flex items-center justify-between px-4 lg:px-6">
       {/* Brand & Identity */}
       <div className="flex items-center gap-3">
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg bg-ghost-card border border-ghost-border flex items-center justify-center p-1 group-hover:border-ghost-cyan transition-colors">
-            <img src="/ghost-icon.svg" alt="GHOST" className="w-6 h-6" />
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="w-8 h-8 rounded-lg bg-ghost-card border border-ghost-border flex items-center justify-center p-1.5 group-hover:border-ghost-cyan transition-colors">
+            <img src="/ghost-icon.svg" alt="GHOST" className="w-5 h-5" />
           </div>
           <div className="flex flex-col">
-            <span className="font-mono text-sm font-bold tracking-widest text-ghost-textPrimary group-hover:text-ghost-cyan transition-colors">
+            <span className="text-sm font-bold tracking-tight text-ghost-textPrimary group-hover:text-ghost-cyan transition-colors">
               GHOST
             </span>
-            <span className="font-mono text-2xs text-ghost-textMuted tracking-tight -mt-1 hidden sm:inline">
-              QUANTITATIVE INTELLIGENCE
+            <span className="text-xs text-ghost-textDim font-normal -mt-1 hidden sm:inline">
+              Investment Intelligence
             </span>
           </div>
         </Link>
       </div>
 
-      {/* Center Status Indicators */}
-      <div className="flex items-center gap-3">
+      {/* Status & User Actions */}
+      <div className="flex items-center gap-4 text-xs">
         <ApiStatusBadge />
-      </div>
 
-      {/* User Actions */}
-      <div className="flex items-center gap-3 font-mono text-xs">
         {isAuthenticated && user ? (
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 bg-ghost-card border border-ghost-border rounded-lg text-2xs text-ghost-textPrimary">
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 bg-ghost-card border border-ghost-border rounded-lg text-xs text-ghost-textMuted">
               <UserIcon className="w-3.5 h-3.5 text-ghost-cyan" />
-              <span>{user.email}</span>
-              <span className="px-1 py-0.5 rounded bg-ghost-border text-2xs text-ghost-textMuted">
-                {user.role}
-              </span>
+              <span className="text-ghost-textPrimary font-medium">{user.email}</span>
             </div>
 
             <button
@@ -55,13 +49,13 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center gap-2">
             <Link
               to="/login"
-              className="px-3 py-1.5 rounded-lg border border-ghost-border hover:border-ghost-cyan text-ghost-textPrimary hover:text-ghost-cyan transition-colors"
+              className="px-3 py-1.5 rounded-lg border border-ghost-border hover:border-ghost-cyan text-ghost-textPrimary hover:text-ghost-cyan transition-colors font-medium"
             >
-              Sign In
+              Sign in
             </Link>
             <Link
               to="/register"
-              className="px-3 py-1.5 rounded-lg bg-ghost-cyan text-ghost-darkest font-semibold hover:bg-ghost-cyan/90 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-ghost-cyan text-slate-950 font-semibold hover:bg-cyan-400 transition-colors"
             >
               Register
             </Link>

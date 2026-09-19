@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { behaviorApi } from '../api';
-import { BehaviorAnalysisResult } from '../types';
+import { BehaviorAnalysisResult, ParticipantActivity } from '../types';
 import { MetricCard } from '../components/common/MetricCard';
 import { RiskBadge } from '../components/common/RiskBadge';
 import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
 import { AssetSelector } from '../components/common/AssetSelector';
-import { Activity, RefreshCw, Shield, Users, Eye } from 'lucide-react';
+import { Activity, RefreshCw, Users, Eye, ChevronRight } from 'lucide-react';
 
 export const Behavior: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState<string>('BTC/USDT');
@@ -14,6 +14,7 @@ export const Behavior: React.FC = () => {
   const [behavior, setBehavior] = useState<BehaviorAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);
+  const [showRawTelemetry, setShowRawTelemetry] = useState<boolean>(false);
 
   const fetchBehavior = useCallback(async () => {
     setIsLoading(true);
@@ -32,25 +33,25 @@ export const Behavior: React.FC = () => {
     fetchBehavior();
   }, [fetchBehavior]);
 
+  const obi = behavior ? behavior.liquidity_pressure.net_imbalance : 0;
+  const detectedWalls = behavior ? behavior.whale_activity.detected_walls : [];
+  const bidWalls = detectedWalls.filter((w) => w.side.toLowerCase() === 'bid' || w.side.toLowerCase() === 'buy');
+  const askWalls = detectedWalls.filter((w) => w.side.toLowerCase() === 'ask' || w.side.toLowerCase() === 'sell');
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-ghost-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-ghost-border">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-mono font-bold tracking-tight text-ghost-textPrimary uppercase">
-              Observable-Behavior & Game-Theoretic Model
-            </h1>
-            <span className="px-2 py-0.5 rounded text-2xs font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-              PHASE 9 ENGINE
-            </span>
-          </div>
-          <p className="text-xs font-mono text-ghost-textMuted mt-0.5">
-            Decouples factual microstructure observations from probabilistic market participant inferences
+          <h1 className="text-2xl font-bold text-ghost-textPrimary tracking-tight">
+            Market Activity
+          </h1>
+          <p className="text-sm text-ghost-textMuted mt-0.5">
+            Order book microstructure observations and participant activity for {selectedSymbol}.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 font-mono text-xs">
+        <div className="flex items-center gap-3">
           <AssetSelector
             selectedSymbol={selectedSymbol}
             onSelectSymbol={(s) => setSelectedSymbol(s)}
@@ -59,7 +60,7 @@ export const Behavior: React.FC = () => {
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
-            className="px-2.5 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary focus:outline-none focus:border-ghost-cyan text-xs font-mono"
+            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary text-xs font-mono focus:outline-none focus:border-ghost-cyan"
           >
             <option value="15m">15m</option>
             <option value="1h">1h</option>
@@ -70,10 +71,10 @@ export const Behavior: React.FC = () => {
           <button
             onClick={fetchBehavior}
             disabled={isLoading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-borderLight text-ghost-textPrimary hover:text-ghost-cyan transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-cyan/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-cyan transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-cyan' : ''}`} />
-            <span>Analyze Telemetry</span>
+            <span>Update</span>
           </button>
         </div>
       </div>
@@ -81,158 +82,141 @@ export const Behavior: React.FC = () => {
       {error && <ErrorState error={error} onRetry={fetchBehavior} />}
 
       {isLoading ? (
-        <LoadingState message="Analyzing order book liquidity pressure and participant archetypes..." />
+        <LoadingState message="Analyzing order book activity..." />
       ) : behavior ? (
         <div className="space-y-6">
-          {/* Top Metric Cards */}
+          {/* Top Metric Summary */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
-              label="BEHAVIORAL STATE"
+              label="Activity State"
               value={behavior.primary_behavior_state.replace('_', ' ')}
-              badge={<RiskBadge label={behavior.primary_behavior_state} variant="state" size="sm" />}
+              badge={<RiskBadge label={behavior.primary_behavior_state} size="sm" />}
               icon={<Activity className="w-4 h-4" />}
               variant="cyan"
             />
+
             <MetricCard
-              label="STATE CONFIDENCE"
-              value={`${(behavior.state_confidence * 100).toFixed(1)}%`}
-              subValue="Bounded mathematically: [0.05, 0.95]"
-              variant="default"
+              label="Order Book Imbalance"
+              value={`${(obi * 100).toFixed(1)}%`}
+              subValue={obi > 0 ? 'Net Bid Accumulation' : 'Net Ask Pressure'}
+              variant={obi > 0 ? 'green' : 'red'}
             />
+
             <MetricCard
-              label="DEPTH ASYMMETRY"
-              value={`${behavior.liquidity_pressure.depth_asymmetry > 0 ? '+' : ''}${behavior.liquidity_pressure.depth_asymmetry.toFixed(3)}`}
-              subValue={`Imbalance: ${behavior.liquidity_pressure.net_imbalance.toFixed(2)} units`}
-              variant={behavior.liquidity_pressure.depth_asymmetry > 0 ? 'green' : 'red'}
+              label="Resting Wall Barriers"
+              value={`${bidWalls.length} Bids / ${askWalls.length} Asks`}
+              subValue="Significant liquidity concentrations"
             />
+
             <MetricCard
-              label="RESTING WALLS"
-              value={behavior.whale_activity.large_resting_walls_count}
-              subValue={`Absorption Ratio: ${behavior.whale_activity.absorption_ratio.toFixed(2)}x`}
-              variant={behavior.whale_activity.large_resting_walls_count > 0 ? 'amber' : 'default'}
+              label="Confidence"
+              value={`${Math.round(behavior.state_confidence * 100)}%`}
+              subValue="Evaluated over 100 candles"
             />
           </div>
 
-          {/* Game-Theoretic Summary Alert Box */}
-          <div className="p-4 rounded-xl bg-ghost-card border border-ghost-cyan/40 text-ghost-textPrimary font-mono text-xs shadow-lg">
-            <div className="flex items-center gap-2 text-ghost-cyan font-bold uppercase tracking-wider mb-1.5">
-              <Shield className="w-4 h-4" />
-              <span>Objective Game-Theoretic Synthesis</span>
+          {/* Factual Microstructure Observations Card */}
+          <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-ghost-border/50">
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-ghost-cyan" />
+                <h2 className="text-base font-semibold text-ghost-textPrimary">
+                  Key Order Book Observations
+                </h2>
+              </div>
             </div>
-            <p className="text-slate-300 leading-relaxed text-xs">
-              {behavior.game_theoretic_summary}
-            </p>
-            <div className="mt-2.5 pt-2 border-t border-ghost-border/40 flex items-center justify-between text-2xs text-ghost-textMuted">
-              <span>REGIME CONTEXT: <strong className="text-ghost-textPrimary">{behavior.regime_context}</strong></span>
-              <span>EPISTEMIC BOUND: Zero Mind-Reading / Observable Facts Only</span>
-            </div>
-          </div>
 
-          {/* Main 2-column: Factual Observations vs Probabilistic Archetype Inferences */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Column 1: Factual Microstructure Observations */}
-            <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-lg">
-              <div className="flex items-center justify-between pb-3 mb-4 border-b border-ghost-border/60">
-                <div className="flex items-center gap-2">
-                  <Eye className="w-4 h-4 text-ghost-cyan" />
-                  <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-ghost-textPrimary">
-                    Factual Microstructure Observations
-                  </h3>
-                </div>
-                <span className="text-2xs font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  FACTUAL ONLY
-                </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Bid Walls */}
+              <div className="p-4 bg-ghost-darkest/60 border border-ghost-border/60 rounded-lg space-y-2">
+                <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                  Support Bids ({bidWalls.length} Walls Detected)
+                </h3>
+                {bidWalls.length > 0 ? (
+                  <div className="space-y-1.5 font-mono text-xs">
+                    {bidWalls.map((wall, i: number) => (
+                      <div key={i} className="flex justify-between items-center text-ghost-textPrimary">
+                        <span>Price: ${wall.price.toFixed(2)}</span>
+                        <span className="text-emerald-400 font-bold">{wall.size.toFixed(2)} BTC</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-ghost-textMuted">No major support bid walls detected in current depth.</p>
+                )}
               </div>
 
-              <div className="space-y-3 font-mono text-xs">
-                {behavior.observations.map((obs, idx) => (
-                  <div key={idx} className="p-3 rounded-lg bg-ghost-darkest border border-ghost-border/60 flex justify-between items-center">
-                    <div>
-                      <div className="font-semibold text-ghost-textPrimary uppercase tracking-wide">
-                        {obs.metric.replace(/_/g, ' ')}
+              {/* Ask Walls */}
+              <div className="p-4 bg-ghost-darkest/60 border border-ghost-border/60 rounded-lg space-y-2">
+                <h3 className="text-xs font-semibold text-rose-400 uppercase tracking-wider">
+                  Resistance Asks ({askWalls.length} Walls Detected)
+                </h3>
+                {askWalls.length > 0 ? (
+                  <div className="space-y-1.5 font-mono text-xs">
+                    {askWalls.map((wall, i: number) => (
+                      <div key={i} className="flex justify-between items-center text-ghost-textPrimary">
+                        <span>Price: ${wall.price.toFixed(2)}</span>
+                        <span className="text-rose-400 font-bold">{wall.size.toFixed(2)} BTC</span>
                       </div>
-                      <div className="text-2xs text-ghost-textMuted mt-0.5">{obs.context}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-ghost-cyan text-sm">{obs.observed_value}</div>
-                      <div className="text-2xs text-ghost-textMuted">{obs.unit}</div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-
-                {behavior.whale_activity.detected_walls.length > 0 && (
-                  <div className="mt-4 pt-3 border-t border-ghost-border/60">
-                    <span className="text-2xs font-bold text-ghost-amber uppercase tracking-wider block mb-2">
-                      Detected Resting Limit Walls (≥3.0x Average Depth)
-                    </span>
-                    <div className="space-y-1 text-2xs">
-                      {behavior.whale_activity.detected_walls.map((wall, wi) => (
-                        <div key={wi} className="flex justify-between items-center py-1 px-2 rounded bg-ghost-border/30">
-                          <span className={wall.side === 'bid' ? 'text-ghost-green font-bold uppercase' : 'text-ghost-red font-bold uppercase'}>
-                            {wall.side} @ ${wall.price.toLocaleString()}
-                          </span>
-                          <span className="text-ghost-textPrimary">
-                            {wall.size.toFixed(2)} units ({wall.ratio_to_avg.toFixed(1)}x avg)
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                ) : (
+                  <p className="text-xs text-ghost-textMuted">No major resistance ask walls detected in current depth.</p>
                 )}
               </div>
             </div>
+          </div>
 
-            {/* Column 2: Probabilistic Participant Archetypes */}
-            <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-lg">
-              <div className="flex items-center justify-between pb-3 mb-4 border-b border-ghost-border/60">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-purple-400" />
-                  <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-ghost-textPrimary">
-                    Probabilistic Participant Archetypes
-                  </h3>
-                </div>
-                <span className="text-2xs font-mono text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
-                  HYPOTHESIS MODEL
-                </span>
-              </div>
-
-              <div className="space-y-3 font-mono text-xs">
-                {behavior.participant_inferences.map((archetype, ai) => (
-                  <div key={ai} className="p-3 rounded-lg bg-ghost-darkest border border-ghost-border/60">
-                    <div className="flex justify-between items-center mb-1.5">
-                      <span className="font-bold text-ghost-textPrimary">
-                        {archetype.archetype.replace(/_/g, ' ')}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xs px-1.5 py-0.5 rounded bg-ghost-border text-ghost-textMuted">
-                          {archetype.activity_level}
-                        </span>
-                        <span className="font-bold text-ghost-cyan">
-                          {(archetype.dominance_score * 100).toFixed(0)}% Dominance
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="w-full h-1.5 bg-ghost-border/40 rounded-full overflow-hidden mb-2">
-                      <div
-                        className="h-full bg-ghost-cyan rounded-full transition-all duration-500"
-                        style={{ width: `${Math.round(archetype.dominance_score * 100)}%` }}
-                      />
-                    </div>
-
-                    <ul className="space-y-0.5 text-2xs text-ghost-textMuted">
-                      {archetype.observed_patterns.map((pat, pi) => (
-                        <li key={pi} className="flex items-start gap-1">
-                          <span className="text-ghost-cyan">•</span>
-                          <span>{pat}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+          {/* Participant Archetypes */}
+          <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-ghost-border/50">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-purple-400" />
+                <h2 className="text-base font-semibold text-ghost-textPrimary">
+                  Participant Archetypes
+                </h2>
               </div>
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-sans text-xs">
+              {behavior.participant_inferences.map((item: ParticipantActivity) => (
+                <div key={item.archetype} className="p-4 bg-ghost-darkest/60 border border-ghost-border/60 rounded-lg space-y-2">
+                  <span className="font-semibold text-ghost-textPrimary capitalize">
+                    {item.archetype.replace('_', ' ')}
+                  </span>
+                  <div className="w-full bg-ghost-border/60 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-ghost-cyan h-full rounded-full"
+                      style={{ width: `${Math.round(item.dominance_score * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-ghost-textMuted font-mono text-2xs block">
+                    Dominance: {Math.round(item.dominance_score * 100)}% ({item.activity_level})
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Progressive Disclosure Action */}
+            <div className="pt-3 border-t border-ghost-border/40 flex items-center justify-between">
+              <button
+                onClick={() => setShowRawTelemetry(!showRawTelemetry)}
+                className="text-xs text-ghost-cyan hover:underline flex items-center gap-1 font-medium"
+              >
+                <span>{showRawTelemetry ? 'Hide raw data' : 'View raw microstructure observations'}</span>
+                <ChevronRight className={`w-3.5 h-3.5 transform transition-transform ${showRawTelemetry ? 'rotate-90' : ''}`} />
+              </button>
+            </div>
+
+            {/* Raw Telemetry Drawer */}
+            {showRawTelemetry && (
+              <div className="p-4 bg-ghost-darkest rounded-lg border border-ghost-border/80 text-xs font-mono text-ghost-textMuted space-y-3">
+                <p className="text-ghost-textPrimary font-semibold font-sans">Raw Observations Array:</p>
+                <pre className="text-2xs text-ghost-cyan leading-relaxed overflow-x-auto">
+                  {JSON.stringify(behavior.observations, null, 2)}
+                </pre>
+              </div>
+            )}
           </div>
         </div>
       ) : null}

@@ -3,73 +3,127 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   TrendingUp,
-  Sliders,
+  Zap,
   ShieldAlert,
   PieChart,
-  History,
-  Terminal,
   Compass,
-  Zap,
   Activity,
+  Sliders,
+  History,
   Maximize2,
+  Terminal,
 } from 'lucide-react';
 
-const NAV_ITEMS = [
+const MAIN_NAV = [
   { path: '/', label: 'Overview', icon: LayoutDashboard },
-  { path: '/market', label: 'Market Data', icon: TrendingUp },
-  { path: '/features', label: 'Feature Engine', icon: Sliders },
-  { path: '/market-state', label: 'Market Regime', icon: Compass },
-  { path: '/signals', label: 'Signals Engine', icon: Zap },
-  { path: '/behavior', label: 'Behavior Model', icon: Activity },
-  { path: '/risk', label: 'Quantitative Risk', icon: ShieldAlert },
-  { path: '/portfolio-risk', label: 'Portfolio Risk', icon: PieChart },
+  { path: '/market', label: 'Markets', icon: TrendingUp },
+  { path: '/signals', label: 'Signals', icon: Zap },
+  { path: '/risk', label: 'Risk', icon: ShieldAlert },
+  { path: '/portfolio-risk', label: 'Portfolio', icon: PieChart },
+];
+
+const ANALYSIS_NAV = [
+  { path: '/market-state', label: 'Market Outlook', icon: Compass },
+  { path: '/behavior', label: 'Market Activity', icon: Activity },
+  { path: '/features', label: 'Market Analysis', icon: Sliders },
   { path: '/risk-history', label: 'Risk History', icon: History },
   { path: '/optimization', label: 'Optimization', icon: Maximize2 },
+];
+
+const DEV_NAV = [
   { path: '/console', label: 'API Console', icon: Terminal },
 ];
 
 export const Sidebar: React.FC = () => {
   return (
-    <aside className="w-56 flex-shrink-0 bg-ghost-darkest border-r border-ghost-border flex flex-col justify-between py-4 font-mono text-xs select-none">
-      <div className="space-y-1 px-3">
-        <div className="px-3 pb-2 text-2xs font-semibold text-ghost-textMuted uppercase tracking-wider">
-          Intelligence Layers
+    <aside className="w-60 flex-shrink-0 bg-ghost-darkest border-r border-ghost-border flex flex-col justify-between py-5 text-sm select-none">
+      <div className="space-y-6 px-3">
+        {/* Main Navigation */}
+        <div className="space-y-1">
+          <div className="px-3 pb-1 text-xs font-semibold text-ghost-textDim tracking-wider uppercase">
+            Platform
+          </div>
+          {MAIN_NAV.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/'}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-medium ${
+                    isActive
+                      ? 'bg-ghost-card text-ghost-cyan font-semibold border border-ghost-border/60 shadow-sm'
+                      : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/50'
+                  }`
+                }
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
         </div>
 
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/'}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-ghost-card text-ghost-cyan font-semibold border border-ghost-borderLight shadow-sm'
-                    : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/50'
-                }`
-              }
-            >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate">{item.label}</span>
-            </NavLink>
-          );
-        })}
+        {/* Intelligence & Research */}
+        <div className="space-y-1">
+          <div className="px-3 pb-1 text-xs font-semibold text-ghost-textDim tracking-wider uppercase">
+            Research & Analysis
+          </div>
+          {ANALYSIS_NAV.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-ghost-card text-ghost-cyan font-semibold border border-ghost-border/60 shadow-sm'
+                      : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/50'
+                  }`
+                }
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
+        </div>
+
+        {/* Developer */}
+        <div className="space-y-1">
+          <div className="px-3 pb-1 text-xs font-semibold text-ghost-textDim tracking-wider uppercase">
+            Developer
+          </div>
+          {DEV_NAV.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-ghost-card text-ghost-cyan font-semibold border border-ghost-border/60 shadow-sm'
+                      : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/50'
+                  }`
+                }
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="px-4 py-3 border-t border-ghost-border/40 text-2xs text-ghost-textMuted space-y-1">
-        <div className="flex justify-between">
-          <span>FRAMEWORK:</span>
-          <span className="text-ghost-textPrimary">FASTAPI 0.115</span>
-        </div>
-        <div className="flex justify-between">
-          <span>PRECISION:</span>
-          <span className="text-ghost-cyan">ZERO-LOOKAHEAD</span>
-        </div>
-        <div className="flex justify-between">
-          <span>CONFIDENCE:</span>
-          <span className="text-ghost-textPrimary">[0.05, 0.95]</span>
+      {/* Clean Bottom Status Footer */}
+      <div className="px-4 py-3 border-t border-ghost-border/60 text-xs text-ghost-textMuted flex items-center justify-between">
+        <span className="font-medium text-ghost-textDim">System</span>
+        <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>Online</span>
         </div>
       </div>
     </aside>
