@@ -24,6 +24,8 @@ const SUPPORTED_NETWORKS = [
   { name: 'Solana', symbol: 'SOL', placeholder: 'Base58 address...', example: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU' },
 ];
 
+const USD_TO_INR = 83.50;
+
 export const PortfolioRisk: React.FC = () => {
   const navigate = useNavigate();
   const [portfolio, setPortfolio] = useState<PortfolioData | null>(null);
@@ -32,6 +34,9 @@ export const PortfolioRisk: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date>(new Date());
+
+  // Currency Display Mode State ('USD' | 'INR' | 'BOTH')
+  const [currencyMode, setCurrencyMode] = useState<'USD' | 'INR' | 'BOTH'>('USD');
 
   // Modals state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -164,9 +169,25 @@ export const PortfolioRisk: React.FC = () => {
     })).sort((a, b) => b.usdValue - a.usdValue);
   }, [portfolio, priceMap]);
 
-  const totalPortfolioValue = useMemo(() => {
+  const totalPortfolioValueUSD = useMemo(() => {
     return enrichedAssets.reduce((sum, a) => sum + a.usdValue, 0);
   }, [enrichedAssets]);
+
+  const totalPortfolioValueINR = useMemo(() => {
+    return totalPortfolioValueUSD * USD_TO_INR;
+  }, [totalPortfolioValueUSD]);
+
+  // Currency Formatter Helper
+  const formatVal = (usdVal: number, mode: 'USD' | 'INR' | 'BOTH' = currencyMode): string => {
+    if (!usdVal || usdVal <= 0) return 'Price unavailable';
+    const usdStr = `$${usdVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const inrVal = usdVal * USD_TO_INR;
+    const inrStr = `₹${inrVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    if (mode === 'USD') return usdStr;
+    if (mode === 'INR') return inrStr;
+    return `${usdStr} (${inrStr})`;
+  };
 
   // Handle Add Wallet Submission
   const handleAddWalletSubmit = async (e: React.FormEvent) => {
@@ -261,23 +282,68 @@ export const PortfolioRisk: React.FC = () => {
       {/* Header & Portfolio Total */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
-          <span className="text-xs font-semibold text-ghost-textDim uppercase tracking-wider block mb-1">
-            Your Portfolio
-          </span>
-          <div className="flex items-baseline gap-4">
-            <h1 className="text-4xl font-bold font-mono text-ghost-textPrimary tracking-tight">
-              ${totalPortfolioValue > 0 ? totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
-            </h1>
-            {totalPortfolioValue > 0 && (
-              <span className="text-emerald-400 text-sm font-medium bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
-                +2.40% today
+          <div className="flex items-center gap-3 mb-1">
+            <span className="text-xs font-semibold text-ghost-textDim uppercase tracking-wider block">
+              Your Portfolio Value
+            </span>
+            
+            {/* Currency Mode Selector Pill */}
+            <div className="inline-flex bg-ghost-darkest border border-ghost-border p-0.5 rounded-lg text-[11px] font-mono">
+              <button
+                onClick={() => setCurrencyMode('USD')}
+                className={`px-2 py-0.5 rounded-md transition-colors ${
+                  currencyMode === 'USD' ? 'bg-ghost-cyan text-ghost-darkest font-bold' : 'text-ghost-textMuted hover:text-ghost-textPrimary'
+                }`}
+              >
+                USD ($)
+              </button>
+              <button
+                onClick={() => setCurrencyMode('INR')}
+                className={`px-2 py-0.5 rounded-md transition-colors ${
+                  currencyMode === 'INR' ? 'bg-ghost-cyan text-ghost-darkest font-bold' : 'text-ghost-textMuted hover:text-ghost-textPrimary'
+                }`}
+              >
+                INR (₹)
+              </button>
+              <button
+                onClick={() => setCurrencyMode('BOTH')}
+                className={`px-2 py-0.5 rounded-md transition-colors ${
+                  currencyMode === 'BOTH' ? 'bg-ghost-cyan text-ghost-darkest font-bold' : 'text-ghost-textMuted hover:text-ghost-textPrimary'
+                }`}
+              >
+                Both ($/₹)
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col">
+            <div className="flex items-baseline gap-4">
+              <h1 className="text-4xl font-bold font-mono text-ghost-textPrimary tracking-tight">
+                {currencyMode === 'INR' ? (
+                  `₹${totalPortfolioValueINR.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                ) : (
+                  `$${totalPortfolioValueUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                )}
+              </h1>
+              {totalPortfolioValueUSD > 0 && (
+                <span className="text-emerald-400 text-sm font-medium bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
+                  +2.40% today
+                </span>
+              )}
+            </div>
+
+            {/* Secondary Currency Display when BOTH mode is active */}
+            {currencyMode === 'BOTH' && totalPortfolioValueUSD > 0 && (
+              <span className="text-sm font-mono text-ghost-cyan mt-1">
+                ≈ ₹{totalPortfolioValueINR.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} INR
               </span>
             )}
           </div>
-          <p className="text-xs text-ghost-textMuted mt-1 flex items-center gap-2">
+
+          <p className="text-xs text-ghost-textMuted mt-1.5 flex items-center gap-2">
             <span>Last updated {Math.round((new Date().getTime() - lastRefreshedAt.getTime()) / 1000)}s ago</span>
             <span>•</span>
-            <span className="text-ghost-cyan font-medium">Read-Only Tracking</span>
+            <span className="text-ghost-cyan font-medium">1 USD = ₹{USD_TO_INR.toFixed(2)} INR</span>
           </p>
         </div>
 
@@ -397,7 +463,7 @@ export const PortfolioRisk: React.FC = () => {
 
                     <div className="text-right">
                       <div className="font-mono font-bold text-ghost-textPrimary text-sm">
-                        ${a.usdValue > 0 ? a.usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'Price unavailable'}
+                        {formatVal(a.usdValue)}
                       </div>
                       <div className="text-xs font-mono text-ghost-textMuted">
                         {a.allocation.toFixed(1)}%
@@ -805,14 +871,14 @@ export const PortfolioRisk: React.FC = () => {
               <div className="flex justify-between items-center py-2 border-b border-ghost-border/40">
                 <span className="text-ghost-textMuted">Current Market Price</span>
                 <span className="font-mono font-bold text-ghost-textPrimary">
-                  ${priceMap[selectedAsset.symbol] ? priceMap[selectedAsset.symbol]?.toLocaleString() : 'Price unavailable'}
+                  {priceMap[selectedAsset.symbol] ? formatVal(priceMap[selectedAsset.symbol] || 0) : 'Price unavailable'}
                 </span>
               </div>
 
               <div className="flex justify-between items-center py-2 border-b border-ghost-border/40">
                 <span className="text-ghost-textMuted">Estimated Total Value</span>
                 <span className="font-mono font-bold text-ghost-cyan text-sm">
-                  ${priceMap[selectedAsset.symbol] ? (selectedAsset.quantity * (priceMap[selectedAsset.symbol] || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'Unavailable'}
+                  {priceMap[selectedAsset.symbol] ? formatVal(selectedAsset.quantity * (priceMap[selectedAsset.symbol] || 0)) : 'Unavailable'}
                 </span>
               </div>
 
@@ -820,7 +886,7 @@ export const PortfolioRisk: React.FC = () => {
                 <>
                   <div className="flex justify-between items-center py-2 border-b border-ghost-border/40">
                     <span className="text-ghost-textMuted">Average Entry Price</span>
-                    <span className="font-mono text-ghost-textPrimary">${selectedAsset.avg_entry_price.toLocaleString()}</span>
+                    <span className="font-mono text-ghost-textPrimary">{formatVal(selectedAsset.avg_entry_price)}</span>
                   </div>
 
                   <div className="flex justify-between items-center py-2 border-b border-ghost-border/40">
@@ -829,7 +895,7 @@ export const PortfolioRisk: React.FC = () => {
                       (priceMap[selectedAsset.symbol] || 0) >= selectedAsset.avg_entry_price ? 'text-emerald-400' : 'text-rose-400'
                     }`}>
                       {priceMap[selectedAsset.symbol] ? (
-                        `${(priceMap[selectedAsset.symbol] || 0) - selectedAsset.avg_entry_price >= 0 ? '+' : ''}$${((selectedAsset.quantity * (priceMap[selectedAsset.symbol] || 0)) - (selectedAsset.quantity * selectedAsset.avg_entry_price)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        formatVal((selectedAsset.quantity * (priceMap[selectedAsset.symbol] || 0)) - (selectedAsset.quantity * selectedAsset.avg_entry_price))
                       ) : 'N/A'}
                     </span>
                   </div>
