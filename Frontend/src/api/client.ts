@@ -17,6 +17,11 @@ export interface ApiRequestOptions extends RequestInit {
   skipAuth?: boolean;
 }
 
+export const formatSymbolForApi = (symbol: string): string => {
+  if (!symbol) return '';
+  return symbol.replace('/', '-').trim();
+};
+
 export class ApiError extends Error {
   public status: number;
   public code: string;

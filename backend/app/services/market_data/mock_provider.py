@@ -73,7 +73,7 @@ class MockMarketDataProvider(MarketDataProvider):
     name: str = "mock"
 
     def _normalize_symbol(self, symbol: str) -> str:
-        sym = symbol.upper().replace("USDT", "").replace("-USD", "").replace("/", "").strip()
+        sym = symbol.upper().replace("USDT", "").replace("-USD", "").replace("-", "").replace("/", "").strip()
         if sym not in ASSET_BASE_PARAMS:
             raise NotFoundException(f"Asset '{symbol}' is not supported by the mock market provider.")
         return sym

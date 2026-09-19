@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api, formatSymbolForApi } from './client';
 import {
   AssetRiskResult,
   PortfolioRiskRequest,
@@ -15,13 +15,13 @@ export const riskApi = {
     benchmark: string = 'BTC/USDT'
   ) =>
     api.get<AssetRiskResult>(
-      `/api/v1/risk/${encodeURIComponent(symbol)}?timeframe=${encodeURIComponent(timeframe)}&limit=${limit}&benchmark=${encodeURIComponent(benchmark)}`
+      `/api/v1/risk/${encodeURIComponent(formatSymbolForApi(symbol))}?timeframe=${encodeURIComponent(timeframe)}&limit=${limit}&benchmark=${encodeURIComponent(formatSymbolForApi(benchmark))}`
     ),
 
   /** GET /api/v1/risk/{symbol}/history */
   getAssetRiskHistory: (symbol: string, limit: number = 50) =>
     api.get<RiskHistoryItem[]>(
-      `/api/v1/risk/${encodeURIComponent(symbol)}/history?limit=${limit}`
+      `/api/v1/risk/${encodeURIComponent(formatSymbolForApi(symbol))}/history?limit=${limit}`
     ),
 
   /** POST /api/v1/risk/portfolio */
