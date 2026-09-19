@@ -22,8 +22,11 @@ export type TickerCallback = (ticker: LiveTickerPayload) => void;
 export interface LiveDepthPayload {
   symbol: string;
   lastUpdateId: number;
+  last_update_id?: number;
   bids: OrderBookLevel[];
   asks: OrderBookLevel[];
+  spread?: number;
+  spread_bps?: number;
   eventTime: number;
 }
 
@@ -133,11 +136,19 @@ class LivePriceService {
                 return { price: p, quantity: q, total: runningAskTotal };
               });
 
+              const bestBidPrice = bids[0]?.price || 0;
+              const bestAskPrice = asks[0]?.price || 0;
+              const rawSpread = bestAskPrice > bestBidPrice ? bestAskPrice - bestBidPrice : 0;
+              const spreadBps = bestBidPrice > 0 ? (rawSpread / bestBidPrice) * 10000 : 0;
+
               const depthPayload: LiveDepthPayload = {
                 symbol: streamKey,
                 lastUpdateId: data.lastUpdateId || 0,
+                last_update_id: data.lastUpdateId || 0,
                 bids,
                 asks,
+                spread: rawSpread,
+                spread_bps: spreadBps,
                 eventTime: Number(data.E || Date.now()),
               };
 

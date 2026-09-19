@@ -78,6 +78,10 @@ class PortfolioService {
     await apiClient.delete(`/api/v1/portfolio/assets/${assetId}`);
   }
 
+  async removeManualAsset(assetId: string): Promise<void> {
+    return this.removeAsset(assetId);
+  }
+
   /** POST /api/v1/portfolio/wallets */
   async addWallet(payload: AddWalletPayload): Promise<WalletItem> {
     const response = await apiClient.post<WalletItem>('/api/v1/portfolio/wallets', payload);

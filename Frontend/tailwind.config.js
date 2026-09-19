@@ -8,21 +8,36 @@ export default {
     extend: {
       colors: {
         ghost: {
-          bg: '#0B0F14',
-          darkest: '#080C10',
-          card: '#111720',
-          cardHover: '#161D27',
-          border: '#253041',
-          borderLight: '#334155',
-          textPrimary: '#F5F7FA',
-          textMuted: '#9AA6B2',
-          textDim: '#667085',
-          cyan: '#06B6D4',
-          blue: '#3B82F6',
+          // Brand Palette
+          burgundy: '#5B0E14',
+          burgundyDark: '#3D080D',
+          burgundyLight: '#741923',
+          burgundySoft: '#8A3038',
+
+          sand: '#F1E194',
+          sandLight: '#F7EAB0',
+          sandDark: '#D9C875',
+
+          // Warm Surfaces & Backgrounds
+          bg: '#170A0C',
+          darkest: '#0F0607',
+          card: '#241114',
+          cardHover: '#30171A',
+          border: '#4A282C',
+          borderLight: '#62353A',
+
+          // Warm Typography
+          textPrimary: '#F7F2E5',
+          textMuted: '#C8BDB2',
+          textDim: '#938580',
+
+          // Semantic & Mapped Fallback Accents
+          cyan: '#F1E194', // Mapped to Golden Sand
+          blue: '#741923',
           green: '#10B981',
           red: '#EF4444',
           amber: '#F59E0B',
-          purple: '#8B5CF6',
+          purple: '#8A3038',
         }
       },
       fontFamily: {

@@ -7,29 +7,49 @@
 @layer base {
   :root {
     color-scheme: dark;
+    --color-burgundy: #5B0E14;
+    --color-burgundy-dark: #3D080D;
+    --color-burgundy-light: #741923;
+    --color-burgundy-soft: #8A3038;
+
+    --color-sand: #F1E194;
+    --color-sand-light: #F7EAB0;
+    --color-sand-dark: #D9C875;
+
+    --dark-background: #170A0C;
+    --dark-surface: #241114;
+    --dark-surface-elevated: #30171A;
+    --dark-border: #4A282C;
+    --dark-text: #F7F2E5;
+    --dark-text-secondary: #C8BDB2;
   }
 
   body {
-    @apply bg-ghost-bg text-ghost-textPrimary antialiased font-sans selection:bg-ghost-cyan/20 selection:text-ghost-cyan;
+    @apply bg-ghost-bg text-ghost-textPrimary antialiased font-sans selection:bg-ghost-burgundy/40 selection:text-ghost-sand;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  /* Custom subtle scrollbar */
+  /* Warm subtle scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    background: #0B0F14;
+    background: #0F0607;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #253041;
+    background: #4A282C;
     border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #334155;
+    background: #62353A;
   }
+}
+
+/* Subtle 150-250ms motion transitions */
+.transition-standard {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }

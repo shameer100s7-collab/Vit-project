@@ -62,7 +62,7 @@ export const Features: React.FC = () => {
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
-            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary text-xs font-mono focus:outline-none focus:border-ghost-cyan"
+            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary text-xs font-mono focus:outline-none focus:border-ghost-sand"
           >
             <option value="15m">15m</option>
             <option value="1h">1h</option>
@@ -73,9 +73,9 @@ export const Features: React.FC = () => {
           <button
             onClick={fetchFeatures}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-cyan/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-cyan transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-sand/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-sand transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-cyan' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-sand' : ''}`} />
             <span>Update</span>
           </button>
         </div>
@@ -90,7 +90,7 @@ export const Features: React.FC = () => {
           {/* Section 1: Momentum */}
           <div className="space-y-3">
             <h2 className="text-sm font-semibold text-ghost-textPrimary flex items-center gap-2">
-              <Activity className="w-4 h-4 text-ghost-cyan" />
+              <Activity className="w-4 h-4 text-ghost-sand" />
               <span>Momentum Indicators</span>
             </h2>
 
@@ -152,13 +152,13 @@ export const Features: React.FC = () => {
           <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-ghost-cyan" />
+                <ShieldCheck className="w-4 h-4 text-ghost-sand" />
                 <h3 className="text-sm font-semibold text-ghost-textPrimary">Technical Specification</h3>
               </div>
 
               <button
                 onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
-                className="text-xs text-ghost-cyan hover:underline flex items-center gap-1 font-medium"
+                className="text-xs text-ghost-sand hover:underline flex items-center gap-1 font-medium"
               >
                 <span>{showTechnicalDetails ? 'Hide calculation details' : 'View raw feature matrix'}</span>
                 <ChevronRight className={`w-3.5 h-3.5 transform transition-transform ${showTechnicalDetails ? 'rotate-90' : ''}`} />
@@ -168,7 +168,7 @@ export const Features: React.FC = () => {
             {showTechnicalDetails && (
               <div className="p-4 bg-ghost-darkest rounded-lg border border-ghost-border/80 font-mono text-xs text-ghost-textMuted space-y-3">
                 <p className="text-ghost-textPrimary font-semibold">Raw Technical Feature Dictionary:</p>
-                <pre className="text-2xs text-ghost-cyan leading-relaxed overflow-x-auto">
+                <pre className="text-2xs text-ghost-sand leading-relaxed overflow-x-auto">
                   {JSON.stringify(features, null, 2)}
                 </pre>
               </div>

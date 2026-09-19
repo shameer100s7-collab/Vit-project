@@ -108,6 +108,7 @@ export interface CanonicalOrderBook {
   asks: OrderBookLevel[];
   spread: number;
   spread_pct?: number;
+  spread_bps?: number;
   bid_depth?: number;
   ask_depth?: number;
   last_update_id?: number;

@@ -98,22 +98,25 @@ export const Market: React.FC = () => {
       });
 
       setOrderbook({
-        ...obRes.data,
+        symbol: selectedSymbol,
+        last_update_id: obRes.data?.last_update_id || 0,
         bids: bidsWithTotal,
         asks: asksWithTotal,
+        spread: obRes.data?.spread || 0,
+        spread_bps: obRes.data?.spread_bps || 0,
+        timestamp: obRes.data?.timestamp || new Date().toISOString(),
       });
-
       setVolume(vRes.data);
-      if (mRes) setMetadata(mRes.data);
-      if (hRes) setProviderHealth(hRes.data);
-
-      setLastEventTime(Date.now());
-      setIsLiveStreamConnected(true);
+      setMetadata(mRes?.data || null);
+      setProviderHealth(hRes?.data || null);
     } catch (err) {
-      setError(err);
-      setIsLiveStreamConnected(false);
+      if (currentSymbolRef.current === selectedSymbol) {
+        setError(err);
+      }
     } finally {
-      setIsLoading(false);
+      if (currentSymbolRef.current === selectedSymbol) {
+        setIsLoading(false);
+      }
     }
   }, [selectedSymbol, timeframe]);
 
@@ -121,60 +124,43 @@ export const Market: React.FC = () => {
     fetchMarketData();
   }, [fetchMarketData]);
 
-  // 2. Real-time WebSocket Subscriptions
+  // 2. Real-time WebSocket connection to Binance Spot
   useEffect(() => {
     let isSubscribed = true;
 
-    // A. 24hr Ticker Subscription
-    const unsubTicker = livePriceService.subscribeTicker(selectedSymbol, (ticker) => {
+    // A. Live Ticker Subscription
+    const unsubTicker = livePriceService.subscribeTicker(selectedSymbol, (data) => {
       if (!isSubscribed || currentSymbolRef.current !== selectedSymbol) return;
-      setLiveTicker(ticker);
-      setLastEventTime(ticker.eventTime);
+      setLiveTicker(data);
+      setLastEventTime(Date.now());
       setIsLiveStreamConnected(true);
-
-      // Update current price in real time
-      setPrice((prev) =>
-        prev
-          ? {
-              ...prev,
-              price: ticker.price,
-              bid_price: ticker.bestBid,
-              ask_price: ticker.bestAsk,
-              timestamp: new Date(ticker.eventTime).toISOString(),
-            }
-          : {
-              symbol: selectedSymbol.split('/')[0],
-              price: ticker.price,
-              currency: 'USD',
-              timestamp: new Date(ticker.eventTime).toISOString(),
-              source: 'Binance Spot',
-              bid_price: ticker.bestBid,
-              ask_price: ticker.bestAsk,
-            }
-      );
     });
 
-    // B. Depth / Order Book Subscription
-    const unsubDepth = livePriceService.subscribeDepth(selectedSymbol, (depth) => {
+    // B. Order Book Depth Subscription (100ms)
+    const unsubDepth = livePriceService.subscribeDepth(selectedSymbol, (depthData) => {
       if (!isSubscribed || currentSymbolRef.current !== selectedSymbol) return;
-      setOrderbook(() => {
-        const topBid = depth.bids[0]?.price || 0;
-        const topAsk = depth.asks[0]?.price || 0;
-        const spr = topAsk && topBid ? topAsk - topBid : 0;
-        const sprPct = topAsk ? (spr / topAsk) * 100 : 0;
 
-        return {
-          symbol: selectedSymbol.split('/')[0],
-          timestamp: new Date(depth.eventTime).toISOString(),
-          bids: depth.bids.slice(0, 15),
-          asks: depth.asks.slice(0, 15),
-          spread: spr,
-          spread_pct: sprPct,
-          last_update_id: depth.lastUpdateId,
-          source: 'Binance Spot',
-        };
+      let runBids = 0;
+      const bidsWithTotal = depthData.bids.map((b) => {
+        runBids += b.quantity;
+        return { ...b, total: runBids };
       });
-      setLastEventTime(depth.eventTime);
+      let runAsks = 0;
+      const asksWithTotal = depthData.asks.map((a) => {
+        runAsks += a.quantity;
+        return { ...a, total: runAsks };
+      });
+
+      setOrderbook({
+        symbol: selectedSymbol,
+        last_update_id: depthData.last_update_id || depthData.lastUpdateId || 0,
+        bids: bidsWithTotal,
+        asks: asksWithTotal,
+        spread: depthData.spread || 0,
+        spread_bps: depthData.spread_bps || 0,
+        timestamp: new Date().toISOString(),
+      });
+      setLastEventTime(Date.now());
     });
 
     // C. Kline / Candle Subscription
@@ -185,14 +171,12 @@ export const Market: React.FC = () => {
         const lastIdx = prev.length - 1;
         const lastCandle = prev[lastIdx];
 
-        // Same interval candle: update current candle in place
         if (new Date(lastCandle.timestamp).getTime() === new Date(liveCandle.timestamp).getTime()) {
           const updated = [...prev];
           updated[lastIdx] = liveCandle;
           return updated;
         }
 
-        // New candle interval opened
         if (new Date(liveCandle.timestamp).getTime() > new Date(lastCandle.timestamp).getTime()) {
           return [...prev.slice(-49), liveCandle];
         }
@@ -210,7 +194,7 @@ export const Market: React.FC = () => {
     };
   }, [selectedSymbol, timeframe]);
 
-  // 3. Freshness Timer (counts elapsed seconds since last live event)
+  // 3. Freshness Timer
   useEffect(() => {
     const timer = setInterval(() => {
       if (lastEventTime) {
@@ -222,7 +206,6 @@ export const Market: React.FC = () => {
     return () => clearInterval(timer);
   }, [lastEventTime]);
 
-  // Resolved Current Values (prioritizing live stream over initial REST snapshot)
   const currentPrice = liveTicker?.price ?? price?.price ?? 0;
   const changePct = liveTicker?.changePercent24h ?? volume?.price_change_pct_24h ?? 0;
   const changeAmount = liveTicker?.change24h ?? volume?.price_change_24h ?? 0;
@@ -240,7 +223,6 @@ export const Market: React.FC = () => {
   const baseSymbol = selectedSymbol.split('/')[0];
   const quoteSymbol = selectedSymbol.split('/')[1] || 'USDT';
 
-  // Format helper for elapsed time
   const formatFreshness = () => {
     if (!isLiveStreamConnected) return 'Connection lost';
     if (elapsedSeconds < 1.0) return 'Updated just now (0.4s)';
@@ -257,21 +239,21 @@ export const Market: React.FC = () => {
             <h1 className="text-2xl font-bold text-ghost-textPrimary tracking-tight">
               {selectedSymbol}
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-ghost-card border border-ghost-border font-mono font-medium text-ghost-textMuted">
-              Source: Binance Spot
+            <span className="text-xs px-2.5 py-0.5 rounded-lg bg-ghost-card border border-ghost-border font-medium text-ghost-textMuted">
+              Binance Spot
             </span>
           </div>
 
           <div className="flex items-center gap-3 text-xs">
-            <span className="text-2xl font-mono font-bold text-ghost-textPrimary">
+            <span className="text-2xl font-bold text-ghost-sand tracking-tight">
               ${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
             </span>
 
             <span
-              className={`inline-flex items-center gap-1 font-mono font-bold text-xs px-2 py-0.5 rounded ${
+              className={`inline-flex items-center gap-1 font-bold text-xs px-2 py-0.5 rounded-md ${
                 changePct >= 0
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
               }`}
             >
               {changePct >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
@@ -279,7 +261,7 @@ export const Market: React.FC = () => {
             </span>
 
             {changeAmount !== 0 && (
-              <span className={`text-xs font-mono ${changeAmount >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <span className={`text-xs font-semibold ${changeAmount >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 ({changeAmount >= 0 ? `+$${changeAmount.toFixed(2)}` : `-$${Math.abs(changeAmount).toFixed(2)}`})
               </span>
             )}
@@ -290,15 +272,12 @@ export const Market: React.FC = () => {
         <div className="flex flex-wrap items-center gap-3">
           {/* Freshness Status Pill */}
           <div
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-mono shadow-sm transition-colors ${
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs shadow-sm transition-colors ${
               isLiveStreamConnected && elapsedSeconds < 10
-                ? 'bg-emerald-500/5 border-emerald-500/30 text-emerald-400'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                 : isLiveStreamConnected && elapsedSeconds < 30
-                ? 'bg-amber-500/5 border-amber-500/30 text-amber-400'
-                : 'bg-rose-500/5 border-rose-500/30 text-rose-400'
-            }`}
-            title={`Real-time WebSocket feed from Binance Spot. Event: ${
-              lastEventTime ? new Date(lastEventTime).toLocaleTimeString() : 'N/A'
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
             }`}
           >
             <span
@@ -311,7 +290,7 @@ export const Market: React.FC = () => {
               }`}
             />
             <span className="font-semibold">{isLiveStreamConnected ? '● Live' : '○ Offline'}</span>
-            <span className="border-l border-ghost-border pl-2 text-ghost-textMuted text-2xs">
+            <span className="border-l border-ghost-border pl-2 text-ghost-textMuted text-[11px]">
               {formatFreshness()}
             </span>
           </div>
@@ -324,7 +303,7 @@ export const Market: React.FC = () => {
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
-            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary text-xs font-mono focus:outline-none focus:border-ghost-cyan"
+            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-xl text-ghost-textPrimary text-xs font-semibold focus:outline-none focus:border-ghost-burgundySoft"
           >
             <option value="15m">15m</option>
             <option value="1h">1h</option>
@@ -335,10 +314,10 @@ export const Market: React.FC = () => {
           <button
             onClick={fetchMarketData}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-cyan/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-cyan transition-colors disabled:opacity-50"
-            title="Force refresh REST snapshots"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-ghost-burgundy border border-ghost-burgundyLight hover:bg-ghost-burgundyLight rounded-xl text-xs font-semibold text-ghost-sand transition-colors shadow disabled:opacity-50"
+            title="Refresh REST snapshots"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-cyan' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
             <span>Update</span>
           </button>
         </div>
@@ -355,10 +334,10 @@ export const Market: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-2 text-xs font-medium rounded-lg transition-colors ${
+            className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all duration-200 ${
               activeTab === tab.id
-                ? 'bg-ghost-card text-ghost-cyan font-semibold border border-ghost-border/80 shadow-sm'
-                : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/50'
+                ? 'bg-ghost-burgundy text-ghost-sand border border-ghost-burgundyLight shadow'
+                : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/60'
             }`}
           >
             {tab.label}
@@ -374,48 +353,48 @@ export const Market: React.FC = () => {
       )}
 
       {isLoading && !price ? (
-        <LoadingState message="Connecting to Binance Spot authoritative stream..." />
+        <LoadingState message="Connecting to Binance Spot stream..." />
       ) : (
         <>
           {/* TAB 1: OVERVIEW & KEY STATS */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* SECTION: KEY STATS CARD */}
-              <div className="bg-ghost-card border border-ghost-border rounded-xl p-6 shadow-sm space-y-5">
+              <div className="bg-ghost-card border border-ghost-border rounded-2xl p-6 shadow-sm space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-ghost-border/50">
                   <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-ghost-cyan" />
-                    <h2 className="text-base font-semibold text-ghost-textPrimary">
+                    <Activity className="w-4 h-4 text-ghost-sand" />
+                    <h2 className="text-base font-bold text-ghost-textPrimary">
                       Key Market Statistics
                     </h2>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-ghost-textDim font-mono">
-                    <span>Data source: Binance Spot</span>
+                  <div className="flex items-center gap-2 text-xs text-ghost-textDim">
+                    <span>Source: Binance Spot</span>
                     <span>•</span>
                     <span>Updated: {lastEventTime ? new Date(lastEventTime).toLocaleTimeString() : 'Live'}</span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 font-mono text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 text-xs">
                   {/* 24h High */}
-                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-lg space-y-1">
-                    <span className="text-ghost-textDim block text-[11px] font-sans uppercase tracking-wider">24h High</span>
+                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-xl space-y-1">
+                    <span className="text-ghost-textDim block text-[11px] font-semibold uppercase tracking-wider">24h High</span>
                     <span className="text-sm font-bold text-emerald-400">
                       ${high24h > 0 ? high24h.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}
                     </span>
                   </div>
 
                   {/* 24h Low */}
-                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-lg space-y-1">
-                    <span className="text-ghost-textDim block text-[11px] font-sans uppercase tracking-wider">24h Low</span>
+                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-xl space-y-1">
+                    <span className="text-ghost-textDim block text-[11px] font-semibold uppercase tracking-wider">24h Low</span>
                     <span className="text-sm font-bold text-rose-400">
                       ${low24h > 0 ? low24h.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}
                     </span>
                   </div>
 
                   {/* 24h Base Volume */}
-                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-lg space-y-1">
-                    <span className="text-ghost-textDim block text-[11px] font-sans uppercase tracking-wider">
+                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-xl space-y-1">
+                    <span className="text-ghost-textDim block text-[11px] font-semibold uppercase tracking-wider">
                       24h Volume ({baseSymbol})
                     </span>
                     <span className="text-sm font-bold text-ghost-textPrimary">
@@ -424,42 +403,42 @@ export const Market: React.FC = () => {
                   </div>
 
                   {/* 24h Quote Turnover Volume */}
-                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-lg space-y-1">
-                    <span className="text-ghost-textDim block text-[11px] font-sans uppercase tracking-wider">
-                      24h Quote Turnover (USDT)
+                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-xl space-y-1">
+                    <span className="text-ghost-textDim block text-[11px] font-semibold uppercase tracking-wider">
+                      24h Quote Turnover
                     </span>
-                    <span className="text-sm font-bold text-ghost-cyan">
+                    <span className="text-sm font-bold text-ghost-sand">
                       {quoteVolume > 0 ? `$${(quoteVolume / 1e6).toFixed(2)}M USDT` : '—'}
                     </span>
                   </div>
 
                   {/* 24h Total Trades */}
-                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-lg space-y-1">
-                    <span className="text-ghost-textDim block text-[11px] font-sans uppercase tracking-wider">24h Trades Count</span>
+                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-xl space-y-1">
+                    <span className="text-ghost-textDim block text-[11px] font-semibold uppercase tracking-wider">24h Trades Count</span>
                     <span className="text-sm font-bold text-ghost-textPrimary">
                       {tradesCount > 0 ? tradesCount.toLocaleString() : '—'}
                     </span>
                   </div>
 
                   {/* Best Bid (Buy) */}
-                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-lg space-y-1">
-                    <span className="text-ghost-textDim block text-[11px] font-sans uppercase tracking-wider">Best Bid Quote</span>
+                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-xl space-y-1">
+                    <span className="text-ghost-textDim block text-[11px] font-semibold uppercase tracking-wider">Best Bid Quote</span>
                     <span className="text-sm font-bold text-emerald-400">
                       ${topBid > 0 ? topBid.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}
                     </span>
                   </div>
 
                   {/* Best Ask (Sell) */}
-                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-lg space-y-1">
-                    <span className="text-ghost-textDim block text-[11px] font-sans uppercase tracking-wider">Best Ask Quote</span>
+                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-xl space-y-1">
+                    <span className="text-ghost-textDim block text-[11px] font-semibold uppercase tracking-wider">Best Ask Quote</span>
                     <span className="text-sm font-bold text-rose-400">
                       ${topAsk > 0 ? topAsk.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}
                     </span>
                   </div>
 
                   {/* Bid-Ask Spread */}
-                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-lg space-y-1">
-                    <span className="text-ghost-textDim block text-[11px] font-sans uppercase tracking-wider">Bid-Ask Spread</span>
+                  <div className="p-3.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-xl space-y-1">
+                    <span className="text-ghost-textDim block text-[11px] font-semibold uppercase tracking-wider">Bid-Ask Spread</span>
                     <span className="text-sm font-bold text-ghost-textPrimary">
                       ${spread.toFixed(2)}{' '}
                       <span className="text-[11px] text-ghost-textMuted font-normal">({spreadBps} bps)</span>
@@ -467,7 +446,7 @@ export const Market: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-2 text-2xs text-ghost-textDim flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="pt-2 text-[11px] text-ghost-textDim flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <p>
                     Values are streamed directly from Binance Spot market data feed without simulated or fabricated statistics.
                   </p>
@@ -476,51 +455,51 @@ export const Market: React.FC = () => {
               </div>
 
               {/* ASSET SPECIFICATION */}
-              <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-3">
+              <div className="bg-ghost-card border border-ghost-border rounded-2xl p-5 shadow-sm space-y-3">
                 <div className="flex items-center justify-between pb-3 border-b border-ghost-border/50">
-                  <h3 className="text-sm font-semibold text-ghost-textPrimary flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-ghost-cyan" />
+                  <h3 className="text-sm font-bold text-ghost-textPrimary flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-ghost-sand" />
                     <span>Instrument Specifications</span>
                   </h3>
-                  <span className="text-xs font-mono text-emerald-400 font-medium">Spot Continuous Trading</span>
+                  <span className="text-xs text-emerald-400 font-semibold">Spot Continuous Trading</span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-sans text-ghost-textMuted">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs text-ghost-textMuted">
                   <div>
-                    <span className="block text-ghost-textDim font-mono text-[11px]">CANONICAL SYMBOL</span>
-                    <strong className="text-ghost-textPrimary font-mono">{selectedSymbol}</strong>
+                    <span className="block text-ghost-textDim text-[11px] font-semibold">CANONICAL SYMBOL</span>
+                    <strong className="text-ghost-textPrimary">{selectedSymbol}</strong>
                   </div>
                   <div>
-                    <span className="block text-ghost-textDim font-mono text-[11px]">BASE ASSET</span>
-                    <strong className="text-ghost-textPrimary font-mono">{baseSymbol}</strong>
+                    <span className="block text-ghost-textDim text-[11px] font-semibold">BASE ASSET</span>
+                    <strong className="text-ghost-textPrimary">{baseSymbol}</strong>
                   </div>
                   <div>
-                    <span className="block text-ghost-textDim font-mono text-[11px]">QUOTE ASSET</span>
-                    <strong className="text-ghost-textPrimary font-mono">{quoteSymbol}</strong>
+                    <span className="block text-ghost-textDim text-[11px] font-semibold">QUOTE ASSET</span>
+                    <strong className="text-ghost-textPrimary">{quoteSymbol}</strong>
                   </div>
                   <div>
-                    <span className="block text-ghost-textDim font-mono text-[11px]">PRICE PRECISION</span>
-                    <strong className="text-ghost-textPrimary font-mono">{metadata?.price_precision || 2} decimals</strong>
+                    <span className="block text-ghost-textDim text-[11px] font-semibold">PRICE PRECISION</span>
+                    <strong className="text-ghost-textPrimary">{metadata?.price_precision || 2} decimals</strong>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 2: OHLCV CANDLES (TIME SERIES) */}
+          {/* TAB 2: OHLCV CANDLES */}
           {activeTab === 'chart' && (
-            <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4">
+            <div className="bg-ghost-card border border-ghost-border rounded-2xl p-5 shadow-sm space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-ghost-border/50">
                 <div>
-                  <h2 className="text-sm font-semibold text-ghost-textPrimary flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-ghost-textPrimary flex items-center gap-2">
                     <span>OHLCV Candlestick Time Series ({candles.length} periods)</span>
                   </h2>
                   <p className="text-xs text-ghost-textMuted mt-0.5">
                     Chronological market candles directly from Binance Spot with live kline updates.
                   </p>
                 </div>
-                <div className="flex items-center gap-3 text-xs font-mono text-ghost-textDim">
-                  <span className="px-2 py-0.5 rounded bg-ghost-darkest border border-ghost-border">
+                <div className="flex items-center gap-3 text-xs text-ghost-textDim">
+                  <span className="px-2.5 py-0.5 rounded-lg bg-ghost-darkest border border-ghost-border font-medium">
                     Interval: {timeframe}
                   </span>
                   <span>Source: Binance Spot</span>
@@ -528,9 +507,9 @@ export const Market: React.FC = () => {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left font-mono text-xs">
+                <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-ghost-border/60 text-ghost-textDim font-medium">
+                    <tr className="border-b border-ghost-border/60 text-ghost-textDim font-semibold uppercase tracking-wider">
                       <th className="py-2.5 px-3">Open Time (UTC)</th>
                       <th className="py-2.5 px-3">Open</th>
                       <th className="py-2.5 px-3">High</th>
@@ -548,7 +527,7 @@ export const Market: React.FC = () => {
                         const isBullish = candle.close >= candle.open;
                         return (
                           <tr key={idx} className="hover:bg-ghost-border/20 transition-colors">
-                            <td className="py-2 px-3 text-ghost-textMuted">
+                            <td className="py-2 px-3 text-ghost-textMuted font-mono">
                               {new Date(candle.timestamp).toLocaleString(undefined, {
                                 month: 'short',
                                 day: 'numeric',
@@ -565,7 +544,7 @@ export const Market: React.FC = () => {
                             <td className="py-2 px-3 text-right text-ghost-textMuted">
                               {candle.volume.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                             </td>
-                            <td className="py-2 px-3 text-right text-ghost-textDim font-sans">
+                            <td className="py-2 px-3 text-right text-ghost-textDim">
                               {candle.trades_count ? candle.trades_count.toLocaleString() : '—'}
                             </td>
                           </tr>
@@ -582,16 +561,16 @@ export const Market: React.FC = () => {
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h2 className="text-sm font-semibold text-ghost-textPrimary">
+                  <h2 className="text-sm font-bold text-ghost-textPrimary">
                     Order Book Depth (Top 15 Levels)
                   </h2>
                   <p className="text-xs text-ghost-textMuted mt-0.5">
                     Live order depth with 100ms push frequency from Binance Spot.
                   </p>
                 </div>
-                <div className="flex items-center gap-3 text-xs font-mono text-ghost-textDim">
+                <div className="flex items-center gap-3 text-xs text-ghost-textDim">
                   {orderbook?.last_update_id ? (
-                    <span className="px-2 py-0.5 rounded bg-ghost-darkest border border-ghost-border">
+                    <span className="px-2.5 py-0.5 rounded-lg bg-ghost-darkest border border-ghost-border font-mono">
                       Update ID: #{orderbook.last_update_id}
                     </span>
                   ) : null}
@@ -602,13 +581,13 @@ export const Market: React.FC = () => {
               {orderbook ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Bids */}
-                  <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-3">
-                    <h3 className="text-sm font-semibold text-emerald-400 flex items-center justify-between">
+                  <div className="bg-ghost-card border border-ghost-border rounded-2xl p-5 shadow-sm space-y-3">
+                    <h3 className="text-sm font-bold text-emerald-400 flex items-center justify-between">
                       <span>Bids (Buy Orders)</span>
-                      <span className="text-xs font-mono text-ghost-textMuted">Cumulative Depth</span>
+                      <span className="text-xs text-ghost-textMuted font-normal">Cumulative Depth</span>
                     </h3>
-                    <div className="space-y-1 font-mono text-xs">
-                      <div className="grid grid-cols-3 text-ghost-textDim pb-1 border-b border-ghost-border/40 font-medium">
+                    <div className="space-y-1 text-xs">
+                      <div className="grid grid-cols-3 text-ghost-textDim pb-1 border-b border-ghost-border/40 font-semibold uppercase tracking-wider text-[11px]">
                         <span>Price (USDT)</span>
                         <span className="text-right">Size ({baseSymbol})</span>
                         <span className="text-right">Total ({baseSymbol})</span>
@@ -616,7 +595,7 @@ export const Market: React.FC = () => {
                       {orderbook.bids.slice(0, 15).map((level, i) => (
                         <div
                           key={i}
-                          className="grid grid-cols-3 py-1 hover:bg-emerald-500/5 rounded px-1 relative overflow-hidden"
+                          className="grid grid-cols-3 py-1 hover:bg-emerald-500/10 rounded-lg px-1 relative overflow-hidden"
                         >
                           <span className="text-emerald-400 font-semibold">${level.price.toFixed(2)}</span>
                           <span className="text-right text-ghost-textPrimary">{level.quantity.toFixed(4)}</span>
@@ -629,13 +608,13 @@ export const Market: React.FC = () => {
                   </div>
 
                   {/* Asks */}
-                  <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-3">
-                    <h3 className="text-sm font-semibold text-rose-400 flex items-center justify-between">
+                  <div className="bg-ghost-card border border-ghost-border rounded-2xl p-5 shadow-sm space-y-3">
+                    <h3 className="text-sm font-bold text-rose-400 flex items-center justify-between">
                       <span>Asks (Sell Orders)</span>
-                      <span className="text-xs font-mono text-ghost-textMuted">Cumulative Depth</span>
+                      <span className="text-xs text-ghost-textMuted font-normal">Cumulative Depth</span>
                     </h3>
-                    <div className="space-y-1 font-mono text-xs">
-                      <div className="grid grid-cols-3 text-ghost-textDim pb-1 border-b border-ghost-border/40 font-medium">
+                    <div className="space-y-1 text-xs">
+                      <div className="grid grid-cols-3 text-ghost-textDim pb-1 border-b border-ghost-border/40 font-semibold uppercase tracking-wider text-[11px]">
                         <span>Price (USDT)</span>
                         <span className="text-right">Size ({baseSymbol})</span>
                         <span className="text-right">Total ({baseSymbol})</span>
@@ -643,7 +622,7 @@ export const Market: React.FC = () => {
                       {orderbook.asks.slice(0, 15).map((level, i) => (
                         <div
                           key={i}
-                          className="grid grid-cols-3 py-1 hover:bg-rose-500/5 rounded px-1 relative overflow-hidden"
+                          className="grid grid-cols-3 py-1 hover:bg-rose-500/10 rounded-lg px-1 relative overflow-hidden"
                         >
                           <span className="text-rose-400 font-semibold">${level.price.toFixed(2)}</span>
                           <span className="text-right text-ghost-textPrimary">{level.quantity.toFixed(4)}</span>
@@ -656,7 +635,7 @@ export const Market: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="p-8 text-center bg-ghost-card border border-ghost-border rounded-xl text-xs text-ghost-textMuted">
+                <div className="p-8 text-center bg-ghost-card border border-ghost-border rounded-2xl text-xs text-ghost-textMuted">
                   Live order book depth stream connecting...
                 </div>
               )}
@@ -665,27 +644,27 @@ export const Market: React.FC = () => {
 
           {/* TAB 4: DIAGNOSTICS & SOURCE */}
           {activeTab === 'statistics' && (
-            <div className="bg-ghost-card border border-ghost-border rounded-xl p-6 shadow-sm space-y-5 font-sans text-xs">
+            <div className="bg-ghost-card border border-ghost-border rounded-2xl p-6 shadow-sm space-y-5 text-xs">
               <div className="flex items-center justify-between pb-3 border-b border-ghost-border/50">
-                <h2 className="text-sm font-semibold text-ghost-textPrimary flex items-center gap-2">
-                  <HardDrive className="w-4 h-4 text-ghost-cyan" />
+                <h2 className="text-sm font-bold text-ghost-textPrimary flex items-center gap-2">
+                  <HardDrive className="w-4 h-4 text-ghost-sand" />
                   <span>Market Feed Integrity & Provenance</span>
                 </h2>
-                <span className="text-xs font-mono text-ghost-cyan">Production Provider</span>
+                <span className="text-xs text-ghost-sand font-bold">Production Provider</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 bg-ghost-darkest border border-ghost-border/60 rounded-lg space-y-2">
-                  <span className="font-semibold text-ghost-textPrimary block">Primary Exchange Provider</span>
-                  <p className="text-sm font-mono text-ghost-cyan font-bold">Binance Spot Public API</p>
+                <div className="p-4 bg-ghost-darkest border border-ghost-border/60 rounded-xl space-y-2">
+                  <span className="font-bold text-ghost-textPrimary block">Primary Exchange Provider</span>
+                  <p className="text-sm text-ghost-sand font-bold">Binance Spot Public API</p>
                   <p className="text-ghost-textMuted leading-relaxed">
                     All prices, 24h volume, order book levels, and candlestick data are directly ingested from the Binance REST API v3 & WebSocket stream.
                   </p>
                 </div>
 
-                <div className="p-4 bg-ghost-darkest border border-ghost-border/60 rounded-lg space-y-2">
-                  <span className="font-semibold text-ghost-textPrimary block">Provider Latency & Health</span>
-                  <div className="flex items-center gap-2 text-emerald-400 font-medium font-mono text-sm">
+                <div className="p-4 bg-ghost-darkest border border-ghost-border/60 rounded-xl space-y-2">
+                  <span className="font-bold text-ghost-textPrimary block">Provider Latency & Health</span>
+                  <div className="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span>OPERATIONAL ({providerHealth?.latency_ms || 18} ms)</span>
                   </div>
@@ -694,9 +673,9 @@ export const Market: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="p-4 bg-ghost-darkest border border-ghost-border/60 rounded-lg space-y-2">
-                  <span className="font-semibold text-ghost-textPrimary block">Data Integrity Policy</span>
-                  <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                <div className="p-4 bg-ghost-darkest border border-ghost-border/60 rounded-xl space-y-2">
+                  <span className="font-bold text-ghost-textPrimary block">Data Integrity Policy</span>
+                  <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>No Synthetic Mock Data</span>
                   </div>

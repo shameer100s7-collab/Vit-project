@@ -57,9 +57,9 @@ export const RiskHistory: React.FC = () => {
           <button
             onClick={fetchHistory}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-cyan/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-cyan transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-sand/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-sand transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-cyan' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-sand' : ''}`} />
             <span>Query Audit Trail</span>
           </button>
         </div>
@@ -79,7 +79,7 @@ export const RiskHistory: React.FC = () => {
         <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4 font-sans text-xs">
           <div className="flex items-center justify-between pb-3 border-b border-ghost-border/50">
             <div className="flex items-center gap-2">
-              <History className="w-4 h-4 text-ghost-cyan" />
+              <History className="w-4 h-4 text-ghost-sand" />
               <h2 className="text-sm font-semibold text-ghost-textPrimary">
                 Persisted Audit Records ({history.length} Entries)
               </h2>
@@ -111,7 +111,7 @@ export const RiskHistory: React.FC = () => {
                   <div className="flex items-center gap-4 text-2xs font-mono">
                     <div>
                       <span className="text-ghost-textMuted mr-1">Risk Score:</span>
-                      <strong className="text-ghost-cyan">{(item.overall_risk * 100).toFixed(1)}</strong>
+                      <strong className="text-ghost-sand">{(item.overall_risk * 100).toFixed(1)}</strong>
                     </div>
                     <div>
                       <span className="text-ghost-textMuted mr-1">Vol:</span>

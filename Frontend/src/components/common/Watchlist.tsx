@@ -13,12 +13,12 @@ const WatchlistItem: React.FC<WatchlistItemProps> = ({ symbol, onRemove, onClick
   
   return (
     <div 
-      className="flex items-center justify-between p-3 bg-ghost-darkest/60 border border-ghost-border/50 rounded-lg hover:border-ghost-cyan/50 transition-colors cursor-pointer group"
+      className="flex items-center justify-between p-3.5 bg-ghost-darkest/70 border border-ghost-border/50 rounded-xl hover:border-ghost-sand/60 transition-colors cursor-pointer group"
       onClick={() => onClick(symbol)}
     >
-      <span className="font-mono font-bold text-ghost-textPrimary text-sm">{symbol}</span>
+      <span className="font-bold text-ghost-textPrimary text-sm tracking-wide">{symbol}</span>
       <div className="flex items-center gap-3">
-        <span className="font-mono font-bold text-ghost-cyan text-sm">
+        <span className="font-bold text-ghost-sand text-sm">
           {livePrice ? `$${livePrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '---'}
         </span>
         <button
@@ -59,9 +59,9 @@ export const Watchlist: React.FC<WatchlistProps> = ({ onSelectSymbol }) => {
   };
 
   return (
-    <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4">
+    <div className="bg-ghost-card border border-ghost-border rounded-2xl p-5 shadow-sm space-y-4">
       <div className="flex items-center justify-between pb-3 border-b border-ghost-border/50">
-        <h2 className="text-base font-semibold text-ghost-textPrimary">My Markets</h2>
+        <h2 className="text-sm font-bold text-ghost-textPrimary tracking-tight">My Markets</h2>
       </div>
 
       <div className="space-y-2">
@@ -84,11 +84,11 @@ export const Watchlist: React.FC<WatchlistProps> = ({ onSelectSymbol }) => {
           placeholder="Add asset (e.g. ADA/USDT)"
           value={newSymbol}
           onChange={(e) => setNewSymbol(e.target.value)}
-          className="flex-1 bg-ghost-darkest border border-ghost-border/80 rounded-lg px-3 py-1.5 text-xs text-ghost-textPrimary placeholder:text-ghost-textDim focus:outline-none focus:border-ghost-cyan font-mono"
+          className="flex-1 bg-ghost-darkest border border-ghost-border rounded-xl px-3 py-2 text-xs text-ghost-textPrimary placeholder:text-ghost-textDim focus:outline-none focus:border-ghost-burgundySoft transition-colors"
         />
         <button
           type="submit"
-          className="p-1.5 bg-ghost-darkest border border-ghost-border hover:border-ghost-cyan rounded-lg text-ghost-textPrimary hover:text-ghost-cyan transition-colors"
+          className="p-2 bg-ghost-burgundy border border-ghost-burgundyLight hover:bg-ghost-burgundyLight rounded-xl text-ghost-sand transition-colors shadow"
           title="Add to Watchlist"
         >
           <Plus className="w-4 h-4" />

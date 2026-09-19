@@ -88,7 +88,7 @@ export const Optimization: React.FC = () => {
         <button
           onClick={handleRunOptimization}
           disabled={isLoading}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-ghost-cyan text-slate-950 font-semibold text-xs rounded-lg hover:bg-cyan-400 transition-colors shadow-sm disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-ghost-burgundy hover:bg-[#6c1219] text-ghost-sand border border-ghost-sand/30 font-semibold text-xs rounded-lg shadow-md transition-colors disabled:opacity-50"
         >
           <Play className="w-3.5 h-3.5 fill-current" />
           <span>Optimize Portfolio</span>
@@ -99,7 +99,7 @@ export const Optimization: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4">
           <h2 className="text-base font-semibold text-ghost-textPrimary flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-ghost-cyan" />
+            <Sliders className="w-4 h-4 text-ghost-sand" />
             <span>Optimization Parameters</span>
           </h2>
 
@@ -109,7 +109,7 @@ export const Optimization: React.FC = () => {
               <select
                 value={method}
                 onChange={(e) => setMethod(e.target.value as any)}
-                className="w-full bg-ghost-darkest border border-ghost-border/80 rounded-lg px-3 py-2 text-ghost-textPrimary focus:outline-none focus:border-ghost-cyan font-mono"
+                className="w-full bg-ghost-darkest border border-ghost-border/80 rounded-lg px-3 py-2 text-ghost-textPrimary focus:outline-none focus:border-ghost-sand font-mono"
               >
                 <option value="MAX_SHARPE">Maximum Sharpe Ratio</option>
                 <option value="RISK_PARITY">Risk Parity (Equal Risk Contribution)</option>
@@ -126,7 +126,7 @@ export const Optimization: React.FC = () => {
                 step="0.5"
                 value={riskAversion}
                 onChange={(e) => setRiskAversion(parseFloat(e.target.value))}
-                className="w-full accent-ghost-cyan"
+                className="w-full accent-ghost-sand"
               />
             </div>
 
@@ -139,7 +139,7 @@ export const Optimization: React.FC = () => {
                 step="0.01"
                 value={minAllocation}
                 onChange={(e) => setMinAllocation(parseFloat(e.target.value))}
-                className="w-full accent-ghost-cyan"
+                className="w-full accent-ghost-sand"
               />
             </div>
 
@@ -152,7 +152,7 @@ export const Optimization: React.FC = () => {
                 step="0.05"
                 value={maxAllocation}
                 onChange={(e) => setMaxAllocation(parseFloat(e.target.value))}
-                className="w-full accent-ghost-cyan"
+                className="w-full accent-ghost-sand"
               />
             </div>
           </div>
@@ -165,7 +165,7 @@ export const Optimization: React.FC = () => {
             {assets.map((a) => (
               <div key={a.symbol} className="p-2.5 bg-ghost-darkest/60 border border-ghost-border/40 rounded-lg flex justify-between items-center">
                 <span>{a.symbol}</span>
-                <span className="text-ghost-cyan font-bold">{(a.currentWeight * 100).toFixed(0)}%</span>
+                <span className="text-ghost-sand font-bold">{(a.currentWeight * 100).toFixed(0)}%</span>
               </div>
             ))}
           </div>
@@ -206,10 +206,10 @@ export const Optimization: React.FC = () => {
                 <div key={symbol} className="space-y-1">
                   <div className="flex justify-between items-center">
                     <span>{symbol}</span>
-                    <span className="text-ghost-cyan font-bold">{(weight * 100).toFixed(1)}%</span>
+                    <span className="text-ghost-sand font-bold">{(weight * 100).toFixed(1)}%</span>
                   </div>
                   <div className="w-full bg-ghost-darkest h-2 rounded-full overflow-hidden border border-ghost-border/40">
-                    <div className="bg-ghost-cyan h-full rounded-full" style={{ width: `${Math.round(weight * 100)}%` }} />
+                    <div className="bg-ghost-sand h-full rounded-full" style={{ width: `${Math.round(weight * 100)}%` }} />
                   </div>
                 </div>
               ))}
@@ -217,7 +217,7 @@ export const Optimization: React.FC = () => {
 
             {backendEndpointStatus === 'NOT_YET_IMPLEMENTED' && (
               <div className="p-3.5 bg-ghost-darkest/80 border border-ghost-border/80 rounded-lg text-ghost-textMuted flex items-start gap-2.5">
-                <Info className="w-4 h-4 text-ghost-cyan shrink-0 mt-0.5" />
+                <Info className="w-4 h-4 text-ghost-sand shrink-0 mt-0.5" />
                 <p className="font-sans text-xs">
                   {simulatedResult.diagnostics}
                 </p>

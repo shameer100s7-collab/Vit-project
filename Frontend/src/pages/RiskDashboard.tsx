@@ -56,7 +56,7 @@ export const RiskDashboard: React.FC = () => {
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
-            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary text-xs font-mono focus:outline-none focus:border-ghost-cyan"
+            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary text-xs font-mono focus:outline-none focus:border-ghost-sand"
           >
             <option value="15m">15m</option>
             <option value="1h">1h</option>
@@ -67,9 +67,9 @@ export const RiskDashboard: React.FC = () => {
           <button
             onClick={fetchRisk}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-cyan/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-cyan transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-sand/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-sand transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-cyan' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-sand' : ''}`} />
             <span>Re-evaluate</span>
           </button>
         </div>
@@ -162,7 +162,7 @@ export const RiskDashboard: React.FC = () => {
             {/* Risk-Adjusted Ratios */}
             <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4">
               <h2 className="text-base font-semibold text-ghost-textPrimary flex items-center gap-2">
-                <Scale className="w-4 h-4 text-ghost-cyan" />
+                <Scale className="w-4 h-4 text-ghost-sand" />
                 <span>Risk-Adjusted Performance</span>
               </h2>
 
@@ -176,7 +176,7 @@ export const RiskDashboard: React.FC = () => {
 
                 <div className="flex items-center justify-between p-3 bg-ghost-darkest/60 border border-ghost-border/40 rounded-lg">
                   <span className="text-ghost-textMuted font-medium">Sortino Ratio</span>
-                  <span className="font-mono font-bold text-ghost-cyan">
+                  <span className="font-mono font-bold text-ghost-sand">
                     {risk.risk_adjusted_metrics.sortino_ratio.toFixed(2)}
                   </span>
                 </div>
@@ -228,7 +228,7 @@ export const RiskDashboard: React.FC = () => {
               <h3 className="text-sm font-semibold text-ghost-textPrimary">Position Sizing Rationale</h3>
               <button
                 onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
-                className="text-xs text-ghost-cyan hover:underline flex items-center gap-1 font-medium"
+                className="text-xs text-ghost-sand hover:underline flex items-center gap-1 font-medium"
               >
                 <span>{showTechnicalDetails ? 'Hide rationale' : 'View allocation rationale'}</span>
                 <ChevronRight className={`w-3.5 h-3.5 transform transition-transform ${showTechnicalDetails ? 'rotate-90' : ''}`} />

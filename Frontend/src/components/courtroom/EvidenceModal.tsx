@@ -84,7 +84,7 @@ export const EvidenceModal: React.FC<EvidenceModalProps> = ({ argument, onClose 
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 mt-1 text-xs text-ghost-textMuted">
-                        <Layers className="w-3.5 h-3.5 text-ghost-cyan" />
+                        <Layers className="w-3.5 h-3.5 text-ghost-sand" />
                         <span>{item.hierarchy}</span>
                       </div>
                     </div>
@@ -112,7 +112,7 @@ export const EvidenceModal: React.FC<EvidenceModalProps> = ({ argument, onClose 
                     {item.threshold_or_condition && (
                       <div className="p-2 rounded bg-ghost-bg/60 border border-ghost-border/40">
                         <span className="text-ghost-textMuted block mb-0.5">Evaluated Benchmark:</span>
-                        <span className="font-mono text-ghost-cyan font-medium">{item.threshold_or_condition}</span>
+                        <span className="font-mono text-ghost-sand font-medium">{item.threshold_or_condition}</span>
                       </div>
                     )}
 
@@ -133,7 +133,7 @@ export const EvidenceModal: React.FC<EvidenceModalProps> = ({ argument, onClose 
                   {/* Source & Freshness Metadata */}
                   <div className="flex flex-wrap items-center justify-between pt-2 border-t border-ghost-border/40 text-xs text-ghost-textMuted gap-2">
                     <div className="flex items-center gap-1.5">
-                      <Database className="w-3.5 h-3.5 text-ghost-cyan" />
+                      <Database className="w-3.5 h-3.5 text-ghost-sand" />
                       <span>Source: <strong className="text-slate-200">{item.source}</strong></span>
                     </div>
                     <div className="flex items-center gap-1.5">

@@ -52,8 +52,8 @@ export const Onboarding: React.FC = () => {
 
   // Common UI classes
   const btnClass = "w-full py-3 px-4 rounded-xl border transition-all text-left flex items-center justify-between";
-  const activeBtnClass = "bg-ghost-cyan/10 border-ghost-cyan text-ghost-cyan";
-  const inactiveBtnClass = "bg-ghost-darkest border-ghost-border/50 text-ghost-textMuted hover:border-ghost-cyan/50 hover:text-ghost-textPrimary";
+  const activeBtnClass = "bg-ghost-sand/10 border-ghost-sand text-ghost-sand";
+  const inactiveBtnClass = "bg-ghost-bg border-ghost-border/50 text-ghost-textMuted hover:border-ghost-sand/50 hover:text-ghost-textPrimary";
 
   return (
     <div className="min-h-screen bg-ghost-bg flex flex-col items-center justify-center p-4">
@@ -64,7 +64,7 @@ export const Onboarding: React.FC = () => {
             <h1 className="text-xl font-bold text-ghost-textPrimary tracking-tight">
               Let's set up your trading profile
             </h1>
-            <span className="text-xs font-mono text-ghost-cyan bg-ghost-cyan/10 px-2 py-1 rounded">
+            <span className="text-xs font-mono text-ghost-sand bg-ghost-sand/10 border border-ghost-sand/20 px-2 py-1 rounded">
               {step} / {totalSteps}
             </span>
           </div>
@@ -72,9 +72,9 @@ export const Onboarding: React.FC = () => {
             A few questions help us make the information and risk settings relevant to you.
           </p>
           
-          <div className="w-full bg-ghost-darkest h-1.5 rounded-full mt-5 overflow-hidden">
+          <div className="w-full bg-ghost-bg h-1.5 rounded-full mt-5 overflow-hidden border border-ghost-border/30">
             <div 
-              className="bg-ghost-cyan h-full rounded-full transition-all duration-300"
+              className="bg-ghost-sand h-full rounded-full transition-all duration-300"
               style={{ width: `${(step / totalSteps) * 100}%` }}
             />
           </div>
@@ -92,7 +92,7 @@ export const Onboarding: React.FC = () => {
                 <select 
                   value={formData.currency}
                   onChange={(e) => updateForm('currency', e.target.value)}
-                  className="bg-ghost-darkest border border-ghost-border/80 rounded-lg px-4 py-3 text-ghost-textPrimary focus:border-ghost-cyan outline-none"
+                  className="bg-ghost-bg border border-ghost-border/80 rounded-lg px-4 py-3 text-ghost-textPrimary focus:border-ghost-sand outline-none"
                 >
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
@@ -104,7 +104,7 @@ export const Onboarding: React.FC = () => {
                     type="number"
                     value={formData.capital}
                     onChange={(e) => updateForm('capital', parseFloat(e.target.value))}
-                    className="w-full bg-ghost-darkest border border-ghost-border/80 rounded-lg pl-8 pr-4 py-3 text-ghost-textPrimary font-mono text-lg focus:border-ghost-cyan outline-none"
+                    className="w-full bg-ghost-bg border border-ghost-border/80 rounded-lg pl-8 pr-4 py-3 text-ghost-textPrimary font-mono text-lg focus:border-ghost-sand outline-none"
                   />
                 </div>
               </div>
@@ -213,7 +213,7 @@ export const Onboarding: React.FC = () => {
                     className={`w-full p-4 rounded-xl border transition-all text-left ${formData.experienceLevel === opt.val ? activeBtnClass : inactiveBtnClass}`}
                   >
                     <div className="font-medium mb-1">{opt.label}</div>
-                    <div className={`text-xs ${formData.experienceLevel === opt.val ? 'text-ghost-cyan/80' : 'text-ghost-textDim'}`}>
+                    <div className={`text-xs ${formData.experienceLevel === opt.val ? 'text-ghost-sand/80' : 'text-ghost-textDim'}`}>
                       {opt.desc}
                     </div>
                   </button>
@@ -244,7 +244,7 @@ export const Onboarding: React.FC = () => {
                       }}
                       className={`py-3 px-4 rounded-xl border transition-all text-center flex items-center justify-center gap-2 ${isSelected ? activeBtnClass : inactiveBtnClass}`}
                     >
-                      {isSelected && <Check className="w-3.5 h-3.5" />}
+                      {isSelected && <Check className="w-3.5 h-3.5 text-ghost-sand" />}
                       <span className="font-medium text-sm">{market}</span>
                     </button>
                   );
@@ -282,14 +282,14 @@ export const Onboarding: React.FC = () => {
           {step === 8 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="text-center pb-2">
-                <div className="w-16 h-16 bg-ghost-cyan/10 text-ghost-cyan rounded-full flex items-center justify-center mx-auto mb-4 border border-ghost-cyan/20">
+                <div className="w-16 h-16 bg-ghost-sand/10 text-ghost-sand rounded-full flex items-center justify-center mx-auto mb-4 border border-ghost-sand/20">
                   <Check className="w-8 h-8" />
                 </div>
                 <h2 className="text-lg font-bold text-ghost-textPrimary">Profile Complete</h2>
                 <p className="text-xs text-ghost-textMuted mt-1">Review your trading profile below.</p>
               </div>
               
-              <div className="bg-ghost-darkest/50 border border-ghost-border/40 rounded-xl p-4 space-y-3 text-sm">
+              <div className="bg-ghost-bg/60 border border-ghost-border/40 rounded-xl p-4 space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-ghost-textMuted">Trading capital</span>
                   <span className="font-mono font-medium">${formData.capital?.toLocaleString()} {formData.currency}</span>
@@ -324,7 +324,7 @@ export const Onboarding: React.FC = () => {
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-ghost-border/40 bg-ghost-darkest/30 flex items-center justify-between">
+        <div className="p-4 border-t border-ghost-border/40 bg-ghost-bg/40 flex items-center justify-between">
           <button
             onClick={handleBack}
             className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${step === 1 ? 'opacity-0 pointer-events-none' : 'text-ghost-textMuted hover:text-ghost-textPrimary'}`}
@@ -336,7 +336,7 @@ export const Onboarding: React.FC = () => {
           {step < totalSteps ? (
             <button
               onClick={handleNext}
-              className="px-6 py-2 bg-ghost-textPrimary text-slate-900 rounded-lg text-sm font-bold hover:bg-white transition-colors flex items-center gap-1"
+              className="px-6 py-2 bg-ghost-sand text-ghost-bg rounded-lg text-sm font-bold hover:bg-ghost-sand/90 transition-colors flex items-center gap-1 shadow-sm"
             >
               <span>Continue</span>
               <ChevronRight className="w-4 h-4" />
@@ -344,7 +344,7 @@ export const Onboarding: React.FC = () => {
           ) : (
             <button
               onClick={handleComplete}
-              className="px-6 py-2 bg-ghost-cyan text-slate-900 rounded-lg text-sm font-bold hover:bg-cyan-400 transition-colors shadow-lg shadow-ghost-cyan/20"
+              className="px-6 py-2 bg-ghost-burgundy hover:bg-[#6c1219] text-ghost-sand rounded-lg text-sm font-bold border border-ghost-sand/30 transition-all shadow-md shadow-ghost-burgundy/20"
             >
               Create my trading profile
             </button>

@@ -138,7 +138,7 @@ export const Signals: React.FC = () => {
     switch (s) {
       case 'EXPANDING':
       case 'TRENDING':
-        return 'bg-ghost-cyan/15 text-ghost-cyan border-ghost-cyan/30';
+        return 'bg-ghost-burgundy/40 text-ghost-sand border-ghost-burgundyLight';
       case 'COMPRESSING':
       case 'CONSOLIDATING':
       case 'RANGING':
@@ -159,7 +159,7 @@ export const Signals: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight text-ghost-textPrimary">SIGNAL</h1>
-            <span className="text-xs px-2 py-0.5 rounded bg-ghost-card border border-ghost-border text-ghost-cyan font-medium">
+            <span className="text-xs px-2.5 py-0.5 rounded-lg bg-ghost-card border border-ghost-border text-ghost-sand font-semibold">
               Market Context Engine
             </span>
           </div>
@@ -213,23 +213,23 @@ export const Signals: React.FC = () => {
             </span>
             <div className="space-y-1 pl-1">
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-ghost-cyan" />
+                <span className="w-1.5 h-1.5 rounded-full bg-ghost-sand" />
                 <span>Visible candle bodies and wicks</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-ghost-cyan" />
+                <span className="w-1.5 h-1.5 rounded-full bg-ghost-sand" />
                 <span>Recent price action without obstruction</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-ghost-cyan" />
+                <span className="w-1.5 h-1.5 rounded-full bg-ghost-sand" />
                 <span>Enough historical candles for structural reference</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-ghost-cyan" />
+                <span className="w-1.5 h-1.5 rounded-full bg-ghost-sand" />
                 <span>Timeframe clearly defined</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-ghost-cyan" />
+                <span className="w-1.5 h-1.5 rounded-full bg-ghost-sand" />
                 <span>Volume pane if available</span>
               </div>
             </div>
@@ -244,7 +244,7 @@ export const Signals: React.FC = () => {
           <div>
             <button
               onClick={handleReset}
-              className="px-6 py-2.5 rounded-lg bg-ghost-cyan hover:bg-ghost-cyan/90 text-slate-950 font-semibold text-xs transition-colors shadow"
+              className="px-6 py-2.5 rounded-xl bg-ghost-burgundy hover:bg-ghost-burgundyLight text-ghost-sand font-semibold text-xs transition-colors shadow"
             >
               Upload Clearer Screenshot
             </button>
@@ -281,7 +281,7 @@ export const Signals: React.FC = () => {
 
               {analysisResult.live_market_comparison && (
                 <div className="flex items-center gap-2 text-ghost-textMuted">
-                  <Database className="w-3.5 h-3.5 text-ghost-cyan" />
+                  <Database className="w-3.5 h-3.5 text-ghost-sand" />
                   <span>
                     Live {analysisResult.live_market_comparison.source || 'Binance'}:{' '}
                     <strong className="text-emerald-400">
@@ -315,7 +315,7 @@ export const Signals: React.FC = () => {
           <div className="p-6 rounded-2xl bg-ghost-card border border-ghost-border shadow-md space-y-4">
             <div className="flex items-center justify-between border-b border-ghost-border pb-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-ghost-textMuted flex items-center gap-2">
-                <Compass className="w-4 h-4 text-ghost-cyan" />
+                <Compass className="w-4 h-4 text-ghost-sand" />
                 MARKET MAP
               </h3>
               <span className="text-xs text-ghost-textMuted">7-Dimension Visual Structure</span>
@@ -325,7 +325,7 @@ export const Signals: React.FC = () => {
               <table className="w-full text-left text-xs border-collapse">
                 <tbody>
                   <tr className="border-b border-ghost-border/40 hover:bg-ghost-bg/40 transition-colors">
-                    <td className="py-3 px-3 font-semibold text-ghost-cyan w-32 uppercase tracking-wider align-top">
+                    <td className="py-3 px-3 font-semibold text-ghost-sand w-32 uppercase tracking-wider align-top">
                       PRICE
                     </td>
                     <td className="py-3 px-3 text-slate-200 leading-relaxed">
@@ -333,7 +333,7 @@ export const Signals: React.FC = () => {
                     </td>
                   </tr>
                   <tr className="border-b border-ghost-border/40 hover:bg-ghost-bg/40 transition-colors">
-                    <td className="py-3 px-3 font-semibold text-ghost-cyan w-32 uppercase tracking-wider align-top">
+                    <td className="py-3 px-3 font-semibold text-ghost-sand w-32 uppercase tracking-wider align-top">
                       STRUCTURE
                     </td>
                     <td className="py-3 px-3 text-slate-200 leading-relaxed">
@@ -341,7 +341,7 @@ export const Signals: React.FC = () => {
                     </td>
                   </tr>
                   <tr className="border-b border-ghost-border/40 hover:bg-ghost-bg/40 transition-colors">
-                    <td className="py-3 px-3 font-semibold text-ghost-cyan w-32 uppercase tracking-wider align-top">
+                    <td className="py-3 px-3 font-semibold text-ghost-sand w-32 uppercase tracking-wider align-top">
                       TIME
                     </td>
                     <td className="py-3 px-3 text-slate-200 leading-relaxed">
@@ -349,7 +349,7 @@ export const Signals: React.FC = () => {
                     </td>
                   </tr>
                   <tr className="border-b border-ghost-border/40 hover:bg-ghost-bg/40 transition-colors">
-                    <td className="py-3 px-3 font-semibold text-ghost-cyan w-32 uppercase tracking-wider align-top">
+                    <td className="py-3 px-3 font-semibold text-ghost-sand w-32 uppercase tracking-wider align-top">
                       VOLUME
                     </td>
                     <td className="py-3 px-3 text-slate-200 leading-relaxed">
@@ -357,7 +357,7 @@ export const Signals: React.FC = () => {
                     </td>
                   </tr>
                   <tr className="border-b border-ghost-border/40 hover:bg-ghost-bg/40 transition-colors">
-                    <td className="py-3 px-3 font-semibold text-ghost-cyan w-32 uppercase tracking-wider align-top">
+                    <td className="py-3 px-3 font-semibold text-ghost-sand w-32 uppercase tracking-wider align-top">
                       RANGE
                     </td>
                     <td className="py-3 px-3 text-slate-200 leading-relaxed">
@@ -365,7 +365,7 @@ export const Signals: React.FC = () => {
                     </td>
                   </tr>
                   <tr className="border-b border-ghost-border/40 hover:bg-ghost-bg/40 transition-colors">
-                    <td className="py-3 px-3 font-semibold text-ghost-cyan w-32 uppercase tracking-wider align-top">
+                    <td className="py-3 px-3 font-semibold text-ghost-sand w-32 uppercase tracking-wider align-top">
                       LOCATION
                     </td>
                     <td className="py-3 px-3 text-slate-200 leading-relaxed">
@@ -373,7 +373,7 @@ export const Signals: React.FC = () => {
                     </td>
                   </tr>
                   <tr className="hover:bg-ghost-bg/40 transition-colors">
-                    <td className="py-3 px-3 font-semibold text-ghost-cyan w-32 uppercase tracking-wider align-top">
+                    <td className="py-3 px-3 font-semibold text-ghost-sand w-32 uppercase tracking-wider align-top">
                       CANDLE
                     </td>
                     <td className="py-3 px-3 text-slate-200 leading-relaxed">
@@ -437,8 +437,8 @@ export const Signals: React.FC = () => {
           {/* WHAT TO WATCH (Context Change Conditions) */}
           <div className="p-5 rounded-2xl bg-ghost-card border border-ghost-border space-y-3">
             <div className="flex items-center justify-between border-b border-ghost-border/60 pb-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-ghost-cyan flex items-center gap-2">
-                <Activity className="w-4 h-4 text-ghost-cyan" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-ghost-sand flex items-center gap-2">
+                <Activity className="w-4 h-4 text-ghost-sand" />
                 WHAT TO WATCH
               </h4>
               <span className="text-[11px] text-ghost-textMuted">Observable Context Change Triggers</span>
@@ -448,9 +448,9 @@ export const Signals: React.FC = () => {
               {analysisResult.what_to_watch.map((item, idx) => (
                 <div
                   key={idx}
-                  className="p-3 rounded-lg bg-ghost-bg border border-ghost-border/60 text-xs text-slate-200 flex items-start gap-2"
+                  className="p-3 rounded-xl bg-ghost-bg border border-ghost-border/60 text-xs text-slate-200 flex items-start gap-2"
                 >
-                  <span className="text-ghost-cyan font-bold">•</span>
+                  <span className="text-ghost-sand font-bold">•</span>
                   <span>{item}</span>
                 </div>
               ))}
@@ -461,7 +461,7 @@ export const Signals: React.FC = () => {
           {analysisResult.multi_timeframe_synthesis && (
             <div className="p-5 rounded-2xl bg-ghost-card border border-ghost-border space-y-3">
               <div className="flex items-center gap-2 border-b border-ghost-border/60 pb-2">
-                <Layers className="w-4 h-4 text-ghost-cyan" />
+                <Layers className="w-4 h-4 text-ghost-sand" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-ghost-textPrimary">
                   HIERARCHICAL MULTI-TIMEFRAME SYNTHESIS
                 </h4>
@@ -470,15 +470,15 @@ export const Signals: React.FC = () => {
               {analysisResult.multi_timeframe_levels && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   {analysisResult.multi_timeframe_levels.map((lvl, idx) => (
-                    <div key={idx} className="p-3 rounded-lg bg-ghost-bg border border-ghost-border/60 space-y-1">
-                      <span className="font-bold text-ghost-cyan block">{lvl.timeframe} ({lvl.context_role.replace(/_/g, ' ')})</span>
+                    <div key={idx} className="p-3 rounded-xl bg-ghost-bg border border-ghost-border/60 space-y-1">
+                      <span className="font-bold text-ghost-sand block">{lvl.timeframe} ({lvl.context_role.replace(/_/g, ' ')})</span>
                       <p className="text-slate-300">{lvl.structure_summary}</p>
                     </div>
                   ))}
                 </div>
               )}
 
-              <p className="text-xs text-slate-300 bg-ghost-bg/70 p-3 rounded-lg border border-ghost-border/40">
+              <p className="text-xs text-slate-300 bg-ghost-bg/70 p-3 rounded-xl border border-ghost-border/40">
                 {analysisResult.multi_timeframe_synthesis}
               </p>
             </div>
@@ -488,7 +488,7 @@ export const Signals: React.FC = () => {
           {analysisResult.limitations && analysisResult.limitations.length > 0 && (
             <div className="p-4 rounded-xl bg-ghost-bg border border-ghost-border/80 text-xs text-ghost-textMuted space-y-2">
               <div className="flex items-center gap-1.5 font-semibold text-slate-300">
-                <Info className="w-3.5 h-3.5 text-ghost-cyan" />
+                <Info className="w-3.5 h-3.5 text-ghost-sand" />
                 <span>Data Limitations Disclosed:</span>
               </div>
               <ul className="space-y-1 pl-5 list-disc text-slate-400">
@@ -503,7 +503,7 @@ export const Signals: React.FC = () => {
           <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-ghost-border/70">
             <button
               onClick={() => window.print()}
-              className="px-4 py-2 rounded-lg bg-ghost-card hover:bg-ghost-border border border-ghost-border text-xs font-medium text-ghost-textMuted hover:text-ghost-textPrimary transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-ghost-card hover:bg-ghost-border border border-ghost-border text-xs font-semibold text-ghost-textMuted hover:text-ghost-textPrimary transition-colors flex items-center gap-1.5"
             >
               <FileText className="w-3.5 h-3.5" />
               <span>Print Context Report</span>
@@ -511,7 +511,7 @@ export const Signals: React.FC = () => {
 
             <button
               onClick={handleReset}
-              className="px-5 py-2 rounded-lg bg-ghost-cyan text-slate-950 font-semibold text-xs flex items-center gap-2 hover:bg-ghost-cyan/90 transition-colors shadow"
+              className="px-5 py-2 rounded-xl bg-ghost-burgundy text-ghost-sand font-semibold text-xs flex items-center gap-2 hover:bg-ghost-burgundyLight transition-colors shadow"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Upload New Chart</span>
@@ -551,9 +551,9 @@ export const Signals: React.FC = () => {
                     key={tf}
                     type="button"
                     onClick={() => setTimeframe(tf)}
-                    className={`py-2 text-xs font-medium rounded transition-colors ${
+                    className={`py-2 text-xs font-semibold rounded-lg transition-colors ${
                       timeframe === tf
-                        ? 'bg-ghost-card text-ghost-cyan shadow border border-ghost-border/40 font-semibold'
+                        ? 'bg-ghost-burgundy text-ghost-sand shadow border border-ghost-burgundyLight font-bold'
                         : 'text-ghost-textMuted hover:text-ghost-textPrimary'
                     }`}
                   >
@@ -578,8 +578,8 @@ export const Signals: React.FC = () => {
               onDrop={(e) => handleDrop(e, setImagePreview)}
               className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
                 imagePreview
-                  ? 'border-ghost-cyan/50 bg-ghost-bg/60'
-                  : 'border-ghost-border hover:border-ghost-cyan/40 bg-ghost-bg/40'
+                  ? 'border-ghost-sand/60 bg-ghost-bg/60'
+                  : 'border-ghost-border hover:border-ghost-sand/40 bg-ghost-bg/40'
               }`}
             >
               {imagePreview ? (
@@ -608,13 +608,13 @@ export const Signals: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="inline-flex p-3 rounded-2xl bg-ghost-card border border-ghost-border text-ghost-cyan">
+                  <div className="inline-flex p-3 rounded-2xl bg-ghost-card border border-ghost-border text-ghost-sand">
                     <Upload className="w-6 h-6" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-ghost-textPrimary">
                       Drag &amp; drop your chart screenshot, or{' '}
-                      <label className="text-ghost-cyan hover:underline cursor-pointer">
+                      <label className="text-ghost-sand hover:underline cursor-pointer">
                         browse file
                         <input
                           type="file"
@@ -639,7 +639,7 @@ export const Signals: React.FC = () => {
                 id="hasVolumeCheck"
                 checked={hasVolume}
                 onChange={(e) => setHasVolume(e.target.checked)}
-                className="rounded border-ghost-border text-ghost-cyan focus:ring-0"
+                className="rounded border-ghost-border text-ghost-burgundy focus:ring-0"
               />
               <label htmlFor="hasVolumeCheck" className="cursor-pointer">
                 Volume pane is visible in this screenshot
@@ -656,7 +656,7 @@ export const Signals: React.FC = () => {
                   id="mtfCheck"
                   checked={enableMtf}
                   onChange={(e) => setEnableMtf(e.target.checked)}
-                  className="rounded border-ghost-border text-ghost-cyan focus:ring-0"
+                  className="rounded border-ghost-border text-ghost-burgundy focus:ring-0"
                 />
                 <label htmlFor="mtfCheck" className="text-xs font-semibold text-ghost-textPrimary cursor-pointer">
                   Attach Supplementary Higher-Timeframe Screenshot (Multi-Timeframe Synthesis)
@@ -684,7 +684,7 @@ export const Signals: React.FC = () => {
 
                 <div className="flex items-center gap-3">
                   <label className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-ghost-card hover:bg-ghost-border border border-ghost-border text-xs font-medium text-ghost-textPrimary cursor-pointer transition-colors">
-                    <Upload className="w-3.5 h-3.5 text-ghost-cyan" />
+                    <Upload className="w-3.5 h-3.5 text-ghost-sand" />
                     <span>Choose Secondary Image</span>
                     <input
                       type="file"
@@ -708,16 +708,16 @@ export const Signals: React.FC = () => {
             <button
               onClick={handleAnalyze}
               disabled={isLoading || !imagePreview}
-              className="w-full py-3.5 px-6 rounded-xl bg-ghost-cyan hover:bg-ghost-cyan/90 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full py-3.5 px-6 rounded-xl bg-ghost-burgundy hover:bg-ghost-burgundyLight text-ghost-sand font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <RefreshCw className="w-4 h-4 animate-spin text-ghost-sand" />
                   <span>{loadingStep}</span>
                 </>
               ) : (
                 <>
-                  <Compass className="w-4 h-4" />
+                  <Compass className="w-4 h-4 text-ghost-sand" />
                   <span>Analyze Market Context</span>
                 </>
               )}

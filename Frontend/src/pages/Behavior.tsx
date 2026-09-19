@@ -63,7 +63,7 @@ export const Behavior: React.FC = () => {
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
-            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary text-xs font-mono focus:outline-none focus:border-ghost-cyan"
+            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary text-xs font-mono focus:outline-none focus:border-ghost-sand"
           >
             <option value="15m">15m</option>
             <option value="1h">1h</option>
@@ -74,9 +74,9 @@ export const Behavior: React.FC = () => {
           <button
             onClick={fetchBehavior}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-cyan/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-cyan transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-sand/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-sand transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-cyan' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-sand' : ''}`} />
             <span>Update</span>
           </button>
         </div>
@@ -121,7 +121,7 @@ export const Behavior: React.FC = () => {
           {/* Activity Summary Narrative */}
           {behavior.summary && (
             <div className="p-4 bg-ghost-card border border-ghost-border rounded-xl flex items-start gap-3">
-              <Shield className="w-5 h-5 text-ghost-cyan shrink-0 mt-0.5" />
+              <Shield className="w-5 h-5 text-ghost-sand shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-xs font-semibold text-ghost-textPrimary uppercase tracking-wider">
                   Microstructure Intelligence Synthesis
@@ -137,7 +137,7 @@ export const Behavior: React.FC = () => {
           <div className="bg-ghost-card border border-ghost-border rounded-xl p-5 shadow-sm space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-ghost-border/50">
               <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-ghost-cyan" />
+                <Eye className="w-4 h-4 text-ghost-sand" />
                 <h2 className="text-base font-semibold text-ghost-textPrimary">
                   Key Order Book Observations
                 </h2>
@@ -164,7 +164,7 @@ export const Behavior: React.FC = () => {
                       </div>
                       <p className="text-ghost-textMuted">{item.interpretation}</p>
                     </div>
-                    <div className="text-right font-mono font-bold text-ghost-cyan shrink-0">
+                    <div className="text-right font-mono font-bold text-ghost-sand shrink-0">
                       {typeof item.value === 'number' ? item.value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : item.value}
                     </div>
                   </div>
@@ -205,7 +205,7 @@ export const Behavior: React.FC = () => {
 
               <div className="p-4 bg-ghost-darkest/60 border border-ghost-border/60 rounded-lg space-y-1">
                 <span className="text-ghost-textMuted text-[11px] block uppercase tracking-wider">Absorption Ratio</span>
-                <span className="text-base font-bold text-ghost-cyan font-mono">
+                <span className="text-base font-bold text-ghost-sand font-mono">
                   {behavior.whale_activity.absorption_ratio.toFixed(2)}x
                 </span>
               </div>
@@ -231,7 +231,7 @@ export const Behavior: React.FC = () => {
                   </span>
                   <div className="w-full bg-ghost-border/60 h-2 rounded-full overflow-hidden">
                     <div
-                      className="bg-ghost-cyan h-full rounded-full transition-all duration-300"
+                      className="bg-ghost-sand h-full rounded-full transition-all duration-300"
                       style={{ width: `${Math.round(score * 100)}%` }}
                     />
                   </div>
@@ -246,7 +246,7 @@ export const Behavior: React.FC = () => {
             <div className="pt-3 border-t border-ghost-border/40 flex items-center justify-between">
               <button
                 onClick={() => setShowRawTelemetry(!showRawTelemetry)}
-                className="text-xs text-ghost-cyan hover:underline flex items-center gap-1 font-medium"
+                className="text-xs text-ghost-sand hover:underline flex items-center gap-1 font-medium"
               >
                 <span>{showRawTelemetry ? 'Hide raw data' : 'View raw microstructure observations'}</span>
                 <ChevronRight className={`w-3.5 h-3.5 transform transition-transform ${showRawTelemetry ? 'rotate-90' : ''}`} />
@@ -257,7 +257,7 @@ export const Behavior: React.FC = () => {
             {showRawTelemetry && (
               <div className="p-4 bg-ghost-darkest rounded-lg border border-ghost-border/80 text-xs font-mono text-ghost-textMuted space-y-3">
                 <p className="text-ghost-textPrimary font-semibold font-sans">Raw Microstructure Data Payload:</p>
-                <pre className="text-[11px] text-ghost-cyan leading-relaxed overflow-x-auto p-2 bg-black/40 rounded border border-ghost-border/40">
+                <pre className="text-[11px] text-ghost-sand leading-relaxed overflow-x-auto p-2 bg-black/40 rounded border border-ghost-border/40">
                   {JSON.stringify(behavior, null, 2)}
                 </pre>
               </div>

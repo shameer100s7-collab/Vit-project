@@ -30,7 +30,7 @@ export const Research: React.FC = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${
               activeTab === tab.id
-                ? 'border-ghost-cyan text-ghost-cyan'
+                ? 'border-ghost-sand text-ghost-sand'
                 : 'border-transparent text-ghost-textMuted hover:text-ghost-textPrimary hover:border-ghost-border'
             }`}
           >

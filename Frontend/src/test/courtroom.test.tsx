@@ -117,8 +117,8 @@ describe('Courtroom Frontend Suite', () => {
     );
 
     expect(screen.getByText('COURTROOM')).toBeInTheDocument();
-    expect(screen.getByText(/"Challenge your market thesis before you act."/i)).toBeInTheDocument();
-    expect(screen.getByText('What is your thesis?')).toBeInTheDocument();
+    expect(screen.getByText(/Challenge your thinking before you act/i)).toBeInTheDocument();
+    expect(screen.getByText('State Your Market Thesis')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /open court/i })).toBeInTheDocument();
   });
 
@@ -132,7 +132,7 @@ describe('Courtroom Frontend Suite', () => {
     const chip = screen.getByText(/"I think BTC is bullish because momentum is in.../i);
     fireEvent.click(chip);
 
-    const textarea = screen.getByPlaceholderText(/I think Bitcoin is bullish because/i) as HTMLTextAreaElement;
+    const textarea = screen.getByPlaceholderText(/I think BTC is bullish because momentum is increasing/i) as HTMLTextAreaElement;
     expect(textarea.value).toContain('I think BTC is bullish');
   });
 
@@ -173,7 +173,7 @@ describe('Courtroom Frontend Suite', () => {
       </BrowserRouter>
     );
 
-    const textarea = screen.getByPlaceholderText(/I think Bitcoin is bullish because/i);
+    const textarea = screen.getByPlaceholderText(/I think BTC is bullish because momentum is increasing/i);
     fireEvent.change(textarea, { target: { value: 'I think BTC is bullish because momentum is increasing.' } });
 
     const submitBtn = screen.getByRole('button', { name: /open court/i });

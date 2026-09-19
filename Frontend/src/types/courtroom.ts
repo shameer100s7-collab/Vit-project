@@ -65,11 +65,14 @@ export interface InvalidationCondition {
 export interface CourtroomCaseCreate {
   symbol: string;
   timeframe?: string;
-  thesis: string;
+  thesis?: string;
+  user_thesis?: string;
   notes?: string;
+  user_notes?: string;
   support_level?: number;
   resistance_level?: number;
   screenshot_data?: string;
+  chart_screenshot?: string;
 }
 
 export interface CourtroomCase {

@@ -56,7 +56,7 @@ export const MarketState: React.FC = () => {
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
-            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary text-xs font-mono focus:outline-none focus:border-ghost-cyan"
+            className="px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-ghost-textPrimary text-xs font-mono focus:outline-none focus:border-ghost-sand"
           >
             <option value="15m">15m</option>
             <option value="1h">1h</option>
@@ -67,9 +67,9 @@ export const MarketState: React.FC = () => {
           <button
             onClick={fetchState}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-cyan/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-cyan transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg hover:border-ghost-sand/50 text-xs font-medium text-ghost-textPrimary hover:text-ghost-sand transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-cyan' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-ghost-sand' : ''}`} />
             <span>Update</span>
           </button>
         </div>
@@ -101,7 +101,7 @@ export const MarketState: React.FC = () => {
               <div className="flex items-center gap-6">
                 <div>
                   <span className="text-xs text-ghost-textMuted block">Model Confidence</span>
-                  <span className="text-xl font-mono font-bold text-ghost-cyan">{confidencePercent}%</span>
+                  <span className="text-xl font-mono font-bold text-ghost-sand">{confidencePercent}%</span>
                 </div>
                 <div>
                   <span className="text-xs text-ghost-textMuted block">Timeframe</span>
@@ -169,7 +169,7 @@ export const MarketState: React.FC = () => {
                   </div>
                 ) : (
                   <div className="p-4 bg-ghost-darkest/40 border border-ghost-border/40 rounded-lg text-xs text-ghost-textMuted flex items-center gap-2">
-                    <Info className="w-4 h-4 text-ghost-cyan" />
+                    <Info className="w-4 h-4 text-ghost-sand" />
                     <span>No contradicting indicator signals detected. Alignment is high.</span>
                   </div>
                 )}
@@ -180,7 +180,7 @@ export const MarketState: React.FC = () => {
             <div className="pt-4 border-t border-ghost-border/40 flex items-center justify-between">
               <button
                 onClick={() => setShowAdvancedModel(!showAdvancedModel)}
-                className="text-xs text-ghost-cyan hover:underline flex items-center gap-1.5 font-medium"
+                className="text-xs text-ghost-sand hover:underline flex items-center gap-1.5 font-medium"
               >
                 <span>{showAdvancedModel ? 'Hide advanced model details' : 'View model specification & parameters'}</span>
                 <ChevronRight className={`w-3.5 h-3.5 transform transition-transform ${showAdvancedModel ? 'rotate-90' : ''}`} />

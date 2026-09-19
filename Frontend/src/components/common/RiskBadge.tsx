@@ -25,7 +25,7 @@ export const RiskBadge: React.FC<BadgeProps> = ({ label, size = 'md' }) => {
       return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
     }
     if (normalized === 'MODERATE' || normalized === 'SIDEWAYS' || normalized === 'NEUTRAL' || normalized === 'HOLD') {
-      return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+      return 'bg-amber-500/10 text-amber-300 border border-amber-500/20';
     }
     if (normalized === 'HIGH' || normalized === 'SHORT' || normalized.includes('BEARISH')) {
       return 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
@@ -33,28 +33,25 @@ export const RiskBadge: React.FC<BadgeProps> = ({ label, size = 'md' }) => {
     if (normalized === 'CRITICAL' || normalized.includes('PANIC')) {
       return 'bg-rose-600/20 text-rose-300 border border-rose-500/40';
     }
-    if (normalized.includes('VOLATILITY') || normalized.includes('VOLATILE')) {
-      return 'bg-purple-500/10 text-purple-300 border border-purple-500/20';
-    }
-    if (normalized.includes('ACCUMULATION')) {
-      return 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/20';
+    if (normalized.includes('ACCUMULATION') || normalized.includes('EXPANDING')) {
+      return 'bg-ghost-burgundy/40 text-ghost-sand border border-ghost-burgundyLight';
     }
     if (normalized.includes('DISTRIBUTION')) {
       return 'bg-orange-500/10 text-orange-300 border border-orange-500/20';
     }
 
-    return 'bg-slate-800/80 text-slate-300 border border-slate-700/60';
+    return 'bg-ghost-card text-ghost-textMuted border border-ghost-border';
   };
 
-    const humanized = 
-      normalized === 'BULLISH_TREND' ? 'Positive' :
-      normalized === 'BEARISH_TREND' ? 'Negative' :
-      normalized === 'SIDEWAYS' ? 'Neutral' :
-      label.replace(/_/g, ' ');
+  const humanized = 
+    normalized === 'BULLISH_TREND' ? 'Positive' :
+    normalized === 'BEARISH_TREND' ? 'Negative' :
+    normalized === 'SIDEWAYS' ? 'Neutral' :
+    label.replace(/_/g, ' ');
 
   return (
     <span
-      className={`inline-flex items-center rounded-md font-sans transition-colors ${getSizeClasses()} ${getColorClasses()}`}
+      className={`inline-flex items-center rounded-lg font-sans transition-colors ${getSizeClasses()} ${getColorClasses()}`}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-80" />
       {humanized}

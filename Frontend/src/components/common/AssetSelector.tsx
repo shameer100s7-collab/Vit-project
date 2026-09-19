@@ -44,7 +44,6 @@ export const AssetSelector: React.FC<AssetSelectorProps> = ({
       return;
     }
 
-    // Discover tradable symbols from provider
     let isMounted = true;
     marketApi
       .getSymbols()
@@ -85,9 +84,9 @@ export const AssetSelector: React.FC<AssetSelectorProps> = ({
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center justify-between gap-2 px-3 py-1.5 bg-ghost-card border border-ghost-border rounded-lg text-xs font-mono font-semibold text-ghost-textPrimary hover:border-ghost-cyan hover:bg-ghost-cardHover transition-colors focus:outline-none focus:ring-1 focus:ring-ghost-cyan disabled:opacity-50"
+        className="inline-flex items-center justify-between gap-2 px-3.5 py-1.5 bg-ghost-card border border-ghost-border rounded-xl text-xs font-bold text-ghost-textPrimary hover:border-ghost-sand/60 hover:bg-ghost-cardHover transition-colors focus:outline-none disabled:opacity-50"
       >
-        <span className="text-ghost-cyan">●</span>
+        <span className="text-ghost-sand">●</span>
         <span>{selectedSymbol}</span>
         <ChevronDown className="w-3.5 h-3.5 text-ghost-textMuted" />
       </button>
@@ -95,9 +94,9 @@ export const AssetSelector: React.FC<AssetSelectorProps> = ({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-20" onClick={() => setIsOpen(false)} />
-          <div className="absolute left-0 mt-1.5 w-60 rounded-xl bg-ghost-card border border-ghost-border shadow-2xl z-30 py-2 font-mono text-xs overflow-hidden">
+          <div className="absolute left-0 mt-1.5 w-60 rounded-2xl bg-ghost-card border border-ghost-border shadow-2xl z-30 py-2 text-xs overflow-hidden">
             <div className="px-3 pb-2 border-b border-ghost-border/60">
-              <form onSubmit={handleCustomSubmit} className="flex items-center gap-1.5 bg-ghost-darkest px-2 py-1 rounded border border-ghost-border">
+              <form onSubmit={handleCustomSubmit} className="flex items-center gap-1.5 bg-ghost-darkest px-2.5 py-1.5 rounded-xl border border-ghost-border">
                 <Search className="w-3.5 h-3.5 text-ghost-textMuted" />
                 <input
                   type="text"
@@ -121,15 +120,15 @@ export const AssetSelector: React.FC<AssetSelectorProps> = ({
                       setIsOpen(false);
                       setSearchQuery('');
                     }}
-                    className={`w-full text-left px-3 py-2 hover:bg-ghost-border/50 flex items-center justify-between transition-colors ${
-                      sym === selectedSymbol ? 'text-ghost-cyan font-bold bg-ghost-cyan/10' : 'text-ghost-textPrimary'
+                    className={`w-full text-left px-3.5 py-2 hover:bg-ghost-border/50 flex items-center justify-between transition-colors ${
+                      sym === selectedSymbol ? 'text-ghost-sand font-bold bg-ghost-burgundy/30' : 'text-ghost-textPrimary'
                     }`}
                   >
                     <span>{sym}</span>
                     {sym === selectedSymbol ? (
-                      <span className="text-[10px] text-ghost-cyan font-bold">ACTIVE</span>
+                      <span className="text-[10px] text-ghost-sand font-bold">ACTIVE</span>
                     ) : (
-                      <span className="text-[10px] text-ghost-textDim font-sans">Binance</span>
+                      <span className="text-[10px] text-ghost-textDim font-normal">Binance</span>
                     )}
                   </button>
                 ))
@@ -139,7 +138,7 @@ export const AssetSelector: React.FC<AssetSelectorProps> = ({
                   <button
                     type="button"
                     onClick={handleCustomSubmit}
-                    className="mt-1 text-ghost-cyan underline text-[11px]"
+                    className="mt-1 text-ghost-sand underline text-[11px]"
                   >
                     Select "{searchQuery.toUpperCase()}/USDT"
                   </button>

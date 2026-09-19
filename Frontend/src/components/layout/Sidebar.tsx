@@ -28,7 +28,7 @@ export const Sidebar: React.FC = () => {
     <aside className="w-60 flex-shrink-0 bg-ghost-bg border-r border-ghost-border flex flex-col justify-between py-6 text-sm select-none">
       <div className="space-y-6 px-3 flex-1">
         {/* Main Navigation */}
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {MAIN_NAV.map((item) => {
             const Icon = item.icon;
             return (
@@ -37,10 +37,10 @@ export const Sidebar: React.FC = () => {
                 to={item.path}
                 end={item.path === '/'}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors font-medium ${
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 font-medium text-xs tracking-wide ${
                     isActive
-                      ? 'bg-ghost-card text-ghost-cyan shadow-sm border border-ghost-border/40'
-                      : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/50'
+                      ? 'bg-ghost-burgundy text-ghost-sand shadow border border-ghost-burgundyLight font-semibold'
+                      : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/60'
                   }`
                 }
               >
@@ -53,11 +53,11 @@ export const Sidebar: React.FC = () => {
 
         {/* Divider */}
         <div className="px-3">
-          <hr className="border-ghost-border/60" />
+          <hr className="border-ghost-border/70" />
         </div>
 
         {/* Settings */}
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {SECONDARY_NAV.map((item) => {
             const Icon = item.icon;
             return (
@@ -65,10 +65,10 @@ export const Sidebar: React.FC = () => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors font-medium ${
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 font-medium text-xs tracking-wide ${
                     isActive
-                      ? 'bg-ghost-card text-ghost-cyan shadow-sm border border-ghost-border/40'
-                      : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/50'
+                      ? 'bg-ghost-burgundy text-ghost-sand shadow border border-ghost-burgundyLight font-semibold'
+                      : 'text-ghost-textMuted hover:text-ghost-textPrimary hover:bg-ghost-card/60'
                   }`
                 }
               >

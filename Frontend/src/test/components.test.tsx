@@ -44,7 +44,7 @@ describe('Common Quantitative Components', () => {
       />
     );
     expect(screen.getByText('Backend connection refused')).toBeInTheDocument();
-    const retryBtn = screen.getByRole('button', { name: /retry/i });
+    const retryBtn = screen.getByRole('button', { name: /try again|retry/i });
     fireEvent.click(retryBtn);
     expect(retried).toBe(true);
   });
