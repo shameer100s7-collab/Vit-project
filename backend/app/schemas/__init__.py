@@ -23,6 +23,12 @@ from app.schemas.market import (
     CanonicalVolume,
     OrderBookLevel,
 )
+from app.schemas.market_state import (
+    EvidenceItem,
+    MarketState,
+    MarketStateResult,
+    MarketStateScores,
+)
 
 __all__ = [
     "ErrorDetail",
@@ -42,4 +48,8 @@ __all__ = [
     "CanonicalAssetMetadata",
     "CanonicalMarketOverviewItem",
     "CanonicalMarketOverview",
+    "MarketState",
+    "EvidenceItem",
+    "MarketStateScores",
+    "MarketStateResult",
 ]
