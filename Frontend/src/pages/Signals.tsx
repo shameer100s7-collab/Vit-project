@@ -26,6 +26,72 @@ import {
 
 const TIMEFRAMES = ['1m', '5m', '15m', '30m', '1H', '4H', '1D', '1W'];
 
+const formatMetricValue = (key: string, value: any): string => {
+  if (value === null || value === undefined) return '—';
+  if (typeof value !== 'number') return String(value);
+  
+  if (key === 'ratio') return `${value.toFixed(2)}x`;
+  if (key.includes('pct') || key === 'bandwidth_pct') return `${value.toFixed(2)}%`;
+  if (key === 'price' || key.startsWith('sma_') || key === 'atr') return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (key === 'rsi') return value.toFixed(1);
+  return value.toLocaleString();
+};
+
+const EvidenceCard: React.FC<{ title: string; data: any; fallback: string }> = ({ title, data, fallback }) => {
+  if (!data) {
+    return (
+      <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-1">
+        <span className="text-[11px] font-bold text-ghost-sand block">{title}</span>
+        <p className="text-xs text-ghost-textPrimary leading-relaxed">{fallback}</p>
+      </div>
+    );
+  }
+
+  // If it happens to be a string (legacy data)
+  if (typeof data === 'string') {
+    return (
+      <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-1">
+        <span className="text-[11px] font-bold text-ghost-sand block">{title}</span>
+        <p className="text-xs text-ghost-textPrimary leading-relaxed">{data}</p>
+      </div>
+    );
+  }
+
+  // Structured evidence object
+  const { status, observation, ...metrics } = data;
+  const hasMetrics = Object.keys(metrics).length > 0;
+
+  return (
+    <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-2 flex flex-col">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-bold text-ghost-sand block">{title}</span>
+        {status && (
+          <span className="text-[10px] font-semibold text-ghost-textPrimary bg-ghost-bg px-2 py-0.5 rounded-full border border-ghost-border/50 truncate max-w-[120px]">
+            {status}
+          </span>
+        )}
+      </div>
+      
+      {hasMetrics && (
+        <div className="grid grid-cols-2 gap-2 mt-1">
+          {Object.entries(metrics).map(([k, v]) => (
+            <div key={k} className="flex flex-col">
+              <span className="text-[10px] text-ghost-textMuted uppercase">{k.replace(/_/g, ' ')}</span>
+              <span className="text-xs font-mono font-medium text-ghost-textPrimary">{formatMetricValue(k, v)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {observation && (
+        <p className="text-xs text-ghost-textMuted leading-relaxed pt-1.5 border-t border-ghost-border/30 mt-auto">
+          {observation}
+        </p>
+      )}
+    </div>
+  );
+};
+
 export const Signals: React.FC = () => {
   // Step & Form State
   const [asset, setAsset] = useState<string>('BTC/USDT');
@@ -351,30 +417,26 @@ export const Signals: React.FC = () => {
                 WHY?
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-1">
-                  <span className="text-[11px] font-bold text-ghost-sand block">Momentum</span>
-                  <p className="text-xs text-ghost-textPrimary leading-relaxed">
-                    {currentSignal.evidence_summary?.momentum || 'Momentum telemetry computed from RSI and MACD.'}
-                  </p>
-                </div>
-                <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-1">
-                  <span className="text-[11px] font-bold text-ghost-sand block">Trend</span>
-                  <p className="text-xs text-ghost-textPrimary leading-relaxed">
-                    {currentSignal.evidence_summary?.trend || 'Price trend relative to 20/50 period averages.'}
-                  </p>
-                </div>
-                <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-1">
-                  <span className="text-[11px] font-bold text-ghost-sand block">Volume</span>
-                  <p className="text-xs text-ghost-textPrimary leading-relaxed">
-                    {currentSignal.evidence_summary?.volume || 'Volume volume ratio relative to 20-period average.'}
-                  </p>
-                </div>
-                <div className="p-3.5 rounded-xl bg-ghost-bg/50 border border-ghost-border space-y-1">
-                  <span className="text-[11px] font-bold text-ghost-sand block">Volatility</span>
-                  <p className="text-xs text-ghost-textPrimary leading-relaxed">
-                    {currentSignal.evidence_summary?.volatility || 'ATR volatility regime classification.'}
-                  </p>
-                </div>
+                <EvidenceCard 
+                  title="Momentum" 
+                  data={currentSignal.evidence_summary?.momentum} 
+                  fallback="Momentum telemetry computed from RSI and MACD." 
+                />
+                <EvidenceCard 
+                  title="Trend" 
+                  data={currentSignal.evidence_summary?.trend} 
+                  fallback="Price trend relative to 20/50 period averages." 
+                />
+                <EvidenceCard 
+                  title="Volume" 
+                  data={currentSignal.evidence_summary?.volume} 
+                  fallback="Volume volume ratio relative to 20-period average." 
+                />
+                <EvidenceCard 
+                  title="Volatility" 
+                  data={currentSignal.evidence_summary?.volatility} 
+                  fallback="ATR volatility regime classification." 
+                />
               </div>
             </div>
 

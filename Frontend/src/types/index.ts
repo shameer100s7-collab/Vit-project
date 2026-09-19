@@ -243,11 +243,40 @@ export interface StrategySignal {
   metrics: Record<string, any>;
 }
 
+export interface MomentumEvidence {
+  status: string;
+  rsi: number;
+  macd_histogram: number;
+  observation: string;
+}
+
+export interface TrendEvidence {
+  status: string;
+  price: number;
+  sma_20: number;
+  sma_50: number;
+  observation: string;
+}
+
+export interface VolumeEvidence {
+  status: string;
+  ratio: number;
+  observation: string;
+}
+
+export interface VolatilityEvidence {
+  status: string;
+  atr: number;
+  bandwidth_pct: number;
+  observation: string;
+}
+
 export interface SignalEvidenceSummary {
-  momentum: string;
-  trend: string;
-  volume: string;
-  volatility: string;
+  momentum?: MomentumEvidence;
+  trend?: TrendEvidence;
+  volume?: VolumeEvidence;
+  volatility?: VolatilityEvidence;
+  [key: string]: any; // fallback for unexpected evidence types
 }
 
 export interface SignalFreshness {
